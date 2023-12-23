@@ -82,17 +82,6 @@ std::map<std::string, std::map<std::string, std::pair<double, AdjList::VertexNod
     return adjMatrix;
 }
 
-
-//function assumes FWalgorithm returns std::map<std::string,std::vector<std::string>>
-//TODO: implement assuming std::map<std::string, std::map<std::string, std::pair<double, AdjList::VertexNode*>>>
-/*
-Path can be found recursivly using:
-print_path (int i, int j) {
-  if (i!=j)
-    print_path(i,p[i][j]);
-  print(j);
-}
-*/
 std::map<std::string, double> AdjList::BCAlgorithm() {
     //loop through each vertex
     std::map<std::string, double> toreturn;
