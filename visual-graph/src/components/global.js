@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import debounce from 'lodash.debounce';
 import Globe from 'react-globe.gl';
 import nodesData from '../resources/nodes_data.json';
 import arcsData from '../resources/arcs_data.json';
@@ -7,6 +8,7 @@ import './global.css'
 const MyGlobe = () => {
   const [airports, setAirports] = useState([]);
   const [selectedAirport, setSelectedAirport] = useState('');
+  const [displayArcs, setDisplayArcs] = useState([]);
   const globeEl = useRef(null);
 
   // List of top ten airports
@@ -31,22 +33,32 @@ const MyGlobe = () => {
     setAirports(airportsWithColor);
   }, []);
 
-  const goToAirport = (airportID) => {
+  useEffect(() => {
+    // Function to pick 2000 random arcs so not rendered slowly
+    const pickRandomArcs = (data, num) => {
+      const shuffled = [...data].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, num);
+    };
+
+    setDisplayArcs(pickRandomArcs(arcsData, 2000));
+  }, []);
+
+  const goToAirport = useCallback(debounce((airportID) => {
     const airport = airports.find(a => a.id === airportID);
     if (airport && globeEl.current) {
       globeEl.current.pointOfView({
         lat: airport.lat,
         lng: airport.lng,
         altitude: 2.5
-      }, 1000);
+      }, 2000); // Duration increased for smoother transition
     }
-  };
+  }, 200), [airports]);
 
   useEffect(() => {
     if (selectedAirport) {
       goToAirport(selectedAirport);
     }
-  }, [selectedAirport]);
+  }, [selectedAirport, goToAirport]);
 
   return (
     <div className="globe-container">
@@ -76,7 +88,7 @@ const MyGlobe = () => {
         pointsData={airports}
         pointColor="color"
         pointAltitude="size"
-        arcsData={arcsData}
+        arcsData={displayArcs}
         arcColor={'color'}
         arcDashLength={() => Math.random()}
         arcDashGap={() => Math.random()}
