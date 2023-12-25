@@ -50,16 +50,26 @@ const MyGlobe = () => {
 
   return (
     <div className="globe-container">
-  <select
-    className="globe-search"
-    value={selectedAirport}
-    onChange={(e) => setSelectedAirport(e.target.value)}
-  >
+      <div className="top-bar">
+      <select
+        className="globe-search"
+        value={selectedAirport}
+        onChange={(e) => setSelectedAirport(e.target.value)}
+      >
         <option value="">Select an Airport</option>
         {topTenAirports.map(airport => (
           <option key={airport} value={airport}>{airport}</option>
         ))}
       </select>
+      <a
+        href="https://github.com/vincentdo1/airports-paths"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="github-link"
+      >
+        View on GitHub
+      </a>
+    </div>
       <Globe
         ref={globeEl}
         globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"

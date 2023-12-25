@@ -16,9 +16,38 @@ html, body {
   overflow: hidden;
 }
 
-.globe-search {
+.top-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
   margin-bottom: 20px;
-  padding: 10px;
-  border-radius: 5px;
+}
+
+.globe-search {
+  padding: 10px 15px;
+  font-size: 16px;
+  line-height: normal;
+  box-sizing: border-box;
+  margin-right: 20px;
   border: 1px solid #000011;
+  height: 40px;
+  border-radius: 5px;
+}
+
+.github-link {
+  padding: 10px 15px;
+  font-size: 16px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  background-color: #212121;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.github-link:hover {
+  background-color: #333333; /* Darker shade on hover */
 }
