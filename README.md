@@ -38,3 +38,5 @@ which will get a map of all the BC values of every airport!
 The outputted BC values are viewable in the results directory which contains the BC values of the 500 and 1000 most visited airports. These can be viewed in the OpenFlightsBC1000.txt and OpenFlightsBC500.txt or in their sorted versions (descending).
 ## Video
 Link to final project video on [youtube](https://www.youtube.com/watch?v=P4iwqSvMmCA&ab_channel=TylerShu)
+## New Changes:
+Add interactive display for Adjacency Graph

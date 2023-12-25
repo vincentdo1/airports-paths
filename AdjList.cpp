@@ -78,23 +78,14 @@ AdjList::~AdjList(){
     }
 }
 
-//and assignment ctor
-//TODO: implement
+// and assignment ctor
 AdjList& AdjList::operator=(const AdjList &other){
-    /*
-        Use copy constructor to accopmlish operator.
-    */
     auto temp = other;
     return *this;
 }
 
-//copy ctor
-//TODO: implement
+// copy ctor
 AdjList::AdjList(const AdjList& rhs){
-    /*
-        Delete the currentl AdjList and then reallocate new memory to
-        match the new list. Used in assignment constructor?
-    */
     AdjList temp = rhs;
 }
 
@@ -331,10 +322,7 @@ void AdjList::removeEdge(std::string name){
 
 }
 
-/*
-  TODO: param to pcik starting node
-*/
-void AdjList::BFSTraversal(){
+void AdjList::BFSTraversal() {
     //Starting off the BFS by initializing the labels for the vertices and edges using map
     std::unordered_map<std::string, bool> visitedVertex;
     std::unordered_map<std::string, bool> visitedEdge;
