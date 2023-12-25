@@ -1,62 +1,78 @@
-import React, { useEffect, useState } from 'react';
-import Globe from 'react-globe.gl'; // assuming using Globe.gl
+import React, { useEffect, useState, useRef } from 'react';
+import Globe from 'react-globe.gl';
+import nodesData from '../resources/nodes_data.json';
+import arcsData from '../resources/arcs_data.json';
+import './global.css'
 
 const MyGlobe = () => {
   const [airports, setAirports] = useState([]);
-  const [paths, setPaths] = useState([]);
+  const [selectedAirport, setSelectedAirport] = useState('');
+  const globeEl = useRef(null);
 
-  const airportsData = [
-    {
-      id: "JFK", // Unique identifier for the airport
-      name: "John F. Kennedy International Airport",
-      lat: 40.6413,
-      lng: -73.7781,
-      // Any additional data you want to display or use (like country, size, etc.)
-    },
-    {
-      id: "LAX",
-      name: "Los Angeles International Airport",
-      lat: 33.9416,
-      lng: -118.4085,
-      // Additional data...
-    },
-  ];
-
-  const edgesData = [
-      [40.6413, -73.7781, 0],
-      [33.9416, -118.4085, 0]
-  ];
-
-  const arcsData = [
-    {
-      startLat: 40.6413,
-      startLng: -73.7781,
-      endLat: 33.9416,
-      endLng: -118.4085,
-      color: [['red', 'white', 'blue', 'green'][Math.round(Math.random() * 3)], ['red', 'white', 'blue', 'green'][Math.round(Math.random() * 3)]]
-    },
-  ];
+  // List of top ten airports
+  const topTenAirports = ['PEK', 'IST', 'SVO', 'DEL', 'URC', 'ICN', 'DXB', 'KUL', 'CCU', 'YYZ'];
 
   useEffect(() => {
-    setAirports(airportsData);
-    setPaths(edgesData);
+    const airportsWithColor = nodesData.map(airport => {
+      // Check if the airport is in the top ten list
+      if (topTenAirports.includes(airport.id)) {
+        // Mark this airport with a distinct color or size
+        return {
+          ...airport,
+          color: 'red',
+          size: 0.5,
+        };
+      }
+      return {
+        ...airport,
+        color: 'white',
+      };
+    });
+    setAirports(airportsWithColor);
   }, []);
 
-  console.log('Airports:', airports);
-console.log('Paths:', paths);
+  const goToAirport = (airportID) => {
+    const airport = airports.find(a => a.id === airportID);
+    if (airport && globeEl.current) {
+      globeEl.current.pointOfView({
+        lat: airport.lat,
+        lng: airport.lng,
+        altitude: 2.5
+      }, 1000);
+    }
+  };
 
+  useEffect(() => {
+    if (selectedAirport) {
+      goToAirport(selectedAirport);
+    }
+  }, [selectedAirport]);
 
   return (
-    <Globe
-      pointsData={airports}
-      arcsData={arcsData}
-      arcColor={'color'}
-      arcDashLength={() => Math.random()}
-      arcDashGap={() => Math.random()}
-      arcDashAnimateTime={() => Math.random() * 4000 + 500}
-      // Props and settings for your globe
-      // other globe settings...
-    />
+    <div className="globe-container">
+  <select
+    className="globe-search"
+    value={selectedAirport}
+    onChange={(e) => setSelectedAirport(e.target.value)}
+  >
+        <option value="">Select an Airport</option>
+        {topTenAirports.map(airport => (
+          <option key={airport} value={airport}>{airport}</option>
+        ))}
+      </select>
+      <Globe
+        ref={globeEl}
+        globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
+        pointsData={airports}
+        pointColor="color"
+        pointAltitude="size"
+        arcsData={arcsData}
+        arcColor={'color'}
+        arcDashLength={() => Math.random()}
+        arcDashGap={() => Math.random()}
+        arcDashAnimateTime={() => Math.random() * 4000 + 500}
+      />
+    </div>
   );
 };
 

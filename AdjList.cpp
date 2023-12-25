@@ -322,9 +322,6 @@ void AdjList::removeEdge(std::string name){
 
 }
 
-/*
-  TODO: param to pcik starting node
-*/
 void AdjList::BFSTraversal() {
     //Starting off the BFS by initializing the labels for the vertices and edges using map
     std::unordered_map<std::string, bool> visitedVertex;
