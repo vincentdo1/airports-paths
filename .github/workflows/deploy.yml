@@ -1,0 +1,47 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "visual-graph/src/**"
+      - "visual-graph/public/**"
+      - "visual-graph/package.json"
+      - "visual-graph/package-lock.json"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: visual-graph/package-lock.json
+
+      - name: Install dependencies
+        working-directory: visual-graph
+        run: npm ci
+
+      - name: Build
+        working-directory: visual-graph
+        run: npm run build
+
+      - name: Update docs/
+        run: |
+          rm -rf docs/
+          cp -r visual-graph/build/. docs/
+
+      - name: Commit and push
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+          git add docs/
+          git diff --staged --quiet && echo "No changes to deploy" && exit 0
+          git commit -m "Deploy: rebuild docs/ [skip ci]"
+          git push
