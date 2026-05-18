@@ -1,0 +1,44 @@
+/* ── Hover Tooltip ── */
+/* Always mounted so position can be updated via a DOM ref without triggering
+   React state updates. Visibility is controlled by .tooltip-visible. */
+.hover-tooltip {
+  position: fixed;
+  pointer-events: none;
+  z-index: 100;
+  background: rgba(4, 12, 40, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(80, 130, 255, 0.3);
+  border-radius: 8px;
+  padding: 6px 11px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.hover-tooltip.tooltip-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tooltip-id {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.8px;
+}
+
+.tooltip-hub {
+  font-size: 10px;
+  font-weight: 600;
+  color: #FFD700;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.22);
+  border-radius: 10px;
+  padding: 1px 7px;
+}
