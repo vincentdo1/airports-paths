@@ -1,16 +1,15 @@
 {
   "files": {
-    "main.css": "/static/css/main.a7afcbcf.css",
-    "main.js": "/static/js/main.1dc68303.js",
-    "static/js/787.d67fcf55.chunk.js": "/static/js/787.d67fcf55.chunk.js",
-    "static/media/logo.svg": "/static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg",
-    "index.html": "/index.html",
-    "main.a7afcbcf.css.map": "/static/css/main.a7afcbcf.css.map",
-    "main.1dc68303.js.map": "/static/js/main.1dc68303.js.map",
-    "787.d67fcf55.chunk.js.map": "/static/js/787.d67fcf55.chunk.js.map"
+    "main.css": "/airports-paths/static/css/main.54f093ed.css",
+    "main.js": "/airports-paths/static/js/main.2cb98fee.js",
+    "static/js/787.d67fcf55.chunk.js": "/airports-paths/static/js/787.d67fcf55.chunk.js",
+    "index.html": "/airports-paths/index.html",
+    "main.54f093ed.css.map": "/airports-paths/static/css/main.54f093ed.css.map",
+    "main.2cb98fee.js.map": "/airports-paths/static/js/main.2cb98fee.js.map",
+    "787.d67fcf55.chunk.js.map": "/airports-paths/static/js/787.d67fcf55.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.a7afcbcf.css",
-    "static/js/main.1dc68303.js"
+    "static/css/main.54f093ed.css",
+    "static/js/main.2cb98fee.js"
   ]
 }
