@@ -485,6 +485,8 @@ html, body {
 }
 
 /* ── Hover Tooltip ── */
+/* Always mounted; visibility toggled via .tooltip-visible so the DOM ref
+   can be repositioned without triggering React state updates. */
 .hover-tooltip {
   position: fixed;
   pointer-events: none;
@@ -500,12 +502,14 @@ html, body {
   gap: 8px;
   white-space: nowrap;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-  animation: tooltipFade 0.12s ease both;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
 }
 
-@keyframes tooltipFade {
-  from { opacity: 0; transform: translateY(3px); }
-  to   { opacity: 1; transform: translateY(0); }
+.hover-tooltip.tooltip-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .tooltip-id {
