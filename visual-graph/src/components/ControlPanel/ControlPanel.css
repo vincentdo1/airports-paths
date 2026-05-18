@@ -1,27 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-/* ── Globe Container ── */
-.globe-container {
-  background-color: #000011;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  position: relative;
-}
-
-/* ── Control Panel ── */
+/* ── Control Panel Shell ── */
 .control-panel {
   position: absolute;
   top: 20px;
@@ -44,18 +21,14 @@ html, body {
     0 0 0 1px rgba(255, 255, 255, 0.04) inset;
 }
 
-.control-panel::-webkit-scrollbar {
-  width: 3px;
-}
-.control-panel::-webkit-scrollbar-track {
-  background: transparent;
-}
+.control-panel::-webkit-scrollbar { width: 3px; }
+.control-panel::-webkit-scrollbar-track { background: transparent; }
 .control-panel::-webkit-scrollbar-thumb {
   background: rgba(80, 130, 255, 0.25);
   border-radius: 2px;
 }
 
-/* ── Panel Header ── */
+/* ── Header ── */
 .panel-header {
   display: flex;
   flex-direction: column;
@@ -99,7 +72,7 @@ html, body {
   margin: 0 -4px;
 }
 
-/* ── Panel Sections ── */
+/* ── Section Layout ── */
 .panel-section {
   display: flex;
   flex-direction: column;
@@ -151,14 +124,9 @@ html, body {
 }
 
 .airport-select option,
-.airport-select optgroup {
-  background: #0a1a3d;
-  color: #dde8ff;
-}
+.airport-select optgroup { background: #0a1a3d; color: #dde8ff; }
 
-.airport-select:hover {
-  border-color: rgba(80, 130, 255, 0.4);
-}
+.airport-select:hover { border-color: rgba(80, 130, 255, 0.4); }
 
 .airport-select:focus {
   border-color: rgba(80, 130, 255, 0.6);
@@ -194,22 +162,16 @@ html, body {
   color: #00e87a;
   border-color: rgba(0, 200, 100, 0.3);
 }
-
-.toggle-btn.on:hover {
-  background: rgba(0, 200, 100, 0.22);
-}
+.toggle-btn.on:hover  { background: rgba(0, 200, 100, 0.22); }
 
 .toggle-btn.off {
   background: rgba(220, 60, 60, 0.12);
   color: #ff7070;
   border-color: rgba(220, 60, 60, 0.25);
 }
+.toggle-btn.off:hover { background: rgba(220, 60, 60, 0.2); }
 
-.toggle-btn.off:hover {
-  background: rgba(220, 60, 60, 0.2);
-}
-
-/* ── Slider ── */
+/* ── Arc Slider ── */
 .slider-group {
   display: flex;
   flex-direction: column;
@@ -222,16 +184,8 @@ html, body {
   align-items: baseline;
 }
 
-.slider-label {
-  font-size: 11px;
-  color: rgba(140, 170, 220, 0.5);
-}
-
-.slider-value {
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(0, 200, 255, 0.9);
-}
+.slider-label { font-size: 11px; color: rgba(140, 170, 220, 0.5); }
+.slider-value  { font-size: 12px; font-weight: 600; color: rgba(0, 200, 255, 0.9); }
 
 .arc-slider {
   width: 100%;
@@ -254,10 +208,7 @@ html, body {
   box-shadow: 0 0 8px rgba(68, 136, 255, 0.55);
   transition: box-shadow 0.15s;
 }
-
-.arc-slider::-webkit-slider-thumb:hover {
-  box-shadow: 0 0 12px rgba(68, 136, 255, 0.8);
-}
+.arc-slider::-webkit-slider-thumb:hover { box-shadow: 0 0 12px rgba(68, 136, 255, 0.8); }
 
 .arc-slider::-moz-range-thumb {
   width: 14px;
@@ -289,7 +240,6 @@ html, body {
   gap: 10px;
   font-size: 12px;
   color: rgba(190, 210, 240, 0.8);
-  font-weight: 400;
 }
 
 .legend-dot {
@@ -379,152 +329,4 @@ html, body {
   background: rgba(40, 60, 110, 0.75);
   border-color: rgba(80, 130, 255, 0.35);
   color: #ffffff;
-}
-
-/* ── Info Card ── */
-.info-card {
-  position: absolute;
-  bottom: 24px;
-  left: 20px;
-  width: 272px;
-  background: rgba(4, 12, 40, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(80, 130, 255, 0.22);
-  border-radius: 14px;
-  padding: 16px;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
-  animation: cardSlideUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes cardSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.info-card-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.info-iata {
-  font-size: 24px;
-  font-weight: 800;
-  color: #FFD700;
-  letter-spacing: 1.5px;
-  line-height: 1;
-  text-shadow: 0 0 16px rgba(255, 215, 0, 0.4);
-}
-
-.info-rank-badge {
-  font-size: 10.5px;
-  font-weight: 600;
-  color: rgba(255, 215, 0, 0.85);
-  background: rgba(255, 215, 0, 0.1);
-  border: 1px solid rgba(255, 215, 0, 0.22);
-  border-radius: 20px;
-  padding: 3px 10px;
-  letter-spacing: 0.2px;
-}
-
-.info-name {
-  margin: 0;
-  font-size: 13.5px;
-  color: rgba(200, 218, 250, 0.9);
-  font-weight: 500;
-  line-height: 1.3;
-}
-
-.info-coords {
-  display: flex;
-  gap: 18px;
-}
-
-.coord-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.coord-label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.9px;
-  color: rgba(80, 130, 255, 0.6);
-  text-transform: uppercase;
-}
-
-.coord-value {
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(190, 215, 255, 0.9);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.3px;
-}
-
-.info-bc-note {
-  margin: 0;
-  font-size: 11px;
-  color: rgba(140, 170, 220, 0.55);
-  line-height: 1.55;
-  border-top: 1px solid rgba(80, 130, 255, 0.1);
-  padding-top: 8px;
-}
-
-/* ── Hover Tooltip ── */
-/* Always mounted; visibility toggled via .tooltip-visible so the DOM ref
-   can be repositioned without triggering React state updates. */
-.hover-tooltip {
-  position: fixed;
-  pointer-events: none;
-  z-index: 100;
-  background: rgba(4, 12, 40, 0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(80, 130, 255, 0.3);
-  border-radius: 8px;
-  padding: 6px 11px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-  opacity: 0;
-  transform: translateY(3px);
-  transition: opacity 0.12s ease, transform 0.12s ease;
-}
-
-.hover-tooltip.tooltip-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.tooltip-id {
-  font-size: 13px;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 0.8px;
-}
-
-.tooltip-hub {
-  font-size: 10px;
-  font-weight: 600;
-  color: #FFD700;
-  background: rgba(255, 215, 0, 0.1);
-  border: 1px solid rgba(255, 215, 0, 0.22);
-  border-radius: 10px;
-  padding: 1px 7px;
 }

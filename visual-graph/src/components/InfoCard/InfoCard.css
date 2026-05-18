@@ -1,0 +1,96 @@
+/* ── Info Card ── */
+.info-card {
+  position: absolute;
+  bottom: 24px;
+  left: 20px;
+  width: 272px;
+  background: rgba(4, 12, 40, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(80, 130, 255, 0.22);
+  border-radius: 14px;
+  padding: 16px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  animation: cardSlideUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cardSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.info-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.info-iata {
+  font-size: 24px;
+  font-weight: 800;
+  color: #FFD700;
+  letter-spacing: 1.5px;
+  line-height: 1;
+  text-shadow: 0 0 16px rgba(255, 215, 0, 0.4);
+}
+
+.info-rank-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: rgba(255, 215, 0, 0.85);
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.22);
+  border-radius: 20px;
+  padding: 3px 10px;
+  letter-spacing: 0.2px;
+}
+
+.info-name {
+  margin: 0;
+  font-size: 13.5px;
+  color: rgba(200, 218, 250, 0.9);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.info-coords {
+  display: flex;
+  gap: 18px;
+}
+
+.coord-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.coord-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  color: rgba(80, 130, 255, 0.6);
+  text-transform: uppercase;
+}
+
+.coord-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(190, 215, 255, 0.9);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.3px;
+}
+
+.info-bc-note {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(140, 170, 220, 0.55);
+  line-height: 1.55;
+  border-top: 1px solid rgba(80, 130, 255, 0.1);
+  padding-top: 8px;
+}

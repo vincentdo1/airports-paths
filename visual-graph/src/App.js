@@ -1,10 +1,7 @@
-import MyGlobe from './components/global';
+import AirportGlobe from './AirportGlobe';
 
 function App() {
-  return (
-    <MyGlobe>
-    </MyGlobe>
-  );
+  return <AirportGlobe />;
 }
 
 export default App;
