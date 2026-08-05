@@ -78,16 +78,8 @@ AdjList::~AdjList(){
     }
 }
 
-// and assignment ctor
-AdjList& AdjList::operator=(const AdjList &other){
-    auto temp = other;
-    return *this;
-}
-
-// copy ctor
-AdjList::AdjList(const AdjList& rhs){
-    AdjList temp = rhs;
-}
+// Copy construction and assignment are deleted in the header (this graph is loaded
+// once and then only read), so there is nothing to define here.
 
 //Calculate distance between two nodes via Haversine formula (on Wikipedia). This calculation doesn't have
 //to be particularly precise.
@@ -297,8 +289,8 @@ void AdjList::removeEdge(std::string name){
     {
         if((*enditr)->ID == edgePtr->ID)
         {
-            //Delete from destination's edges list
-            destPtr->edges.erase(enditr);
+            //Delete from destination's asEnd list (the edge lives there, not in edges)
+            destPtr->asEnd.erase(enditr);
             break;
         }
     }

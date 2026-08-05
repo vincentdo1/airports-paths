@@ -19,10 +19,42 @@ make – compiles main.cpp\
 make test – compiles test/test.cpp\
 make test_alg – compiles test/test_alg.cpp\
 make testBFS – compiles test/testBFS.cpp\
+make testRouting – compiles tests/testRouting.cpp\
+make testPool – compiles tests/testPool.cpp\
 ./main – runs main.cpp\
 ./test - runs test.cpp\
 ./test_alg – runs test_alg.cpp\
-./testBFS – runs testBFS
+./testBFS – runs testBFS\
+./testRouting – runs testRouting\
+./testPool – runs testPool
+
+## HTTP API
+The project also includes a small HTTP/JSON service (`server.cpp`) that answers route, airport, and centrality queries over the loaded graph. Build and run it with:
+```
+make server
+./server
+```
+By default it loads the 500-airport data set and listens on port 8080. Everything is configurable through environment variables: `AIRPORT_PORT`, `AIRPORT_THREADS`, `AIRPORT_MAXQUEUE`, `AIRPORT_NODES`, `AIRPORT_EDGES`, and `AIRPORT_CENTRALITY`.
+
+Endpoints (all `GET`):
+- `/healthz` – liveness check
+- `/api/v1/airports/{code}` – airport metadata, e.g. `/api/v1/airports/ORD`
+- `/api/v1/routes?source=ORD&destination=NRT&mode=hops` – fewest-hop route (BFS)
+- `/api/v1/routes?source=ORD&destination=NRT&mode=distance` – shortest-distance route (Dijkstra)
+- `/api/v1/network/central-airports?limit=20` – most central airports, from the precomputed betweenness values
+
+For example:
+```
+curl "http://localhost:8080/api/v1/routes?source=PEK&destination=JFK&mode=distance"
+```
+```json
+{"source":"PEK","destination":"JFK","mode":"distance","algorithm":"dijkstra","path":["PEK","JFK"],"hops":1,"distanceKm":10972.2}
+```
+
+The server reads the graph once at startup and then only reads it, so a fixed pool of worker threads answers requests concurrently without locking. The job queue is bounded and returns `503` when the backlog is full, and a per-connection read timeout keeps a slow client from tying up a worker. The HTTP and JSON are written by hand to keep the dependency surface at zero and make the networking explicit; a production deployment would sit on a vetted HTTP/JSON library.
+
+Betweenness centrality is expensive to compute (roughly seven minutes over the 500-airport set), so it is produced offline by `main.cpp` into `results/` and served from there rather than recomputed per request.
+
 ## Running with OpenFlights example
 The graph can be loaded as such:
 ```

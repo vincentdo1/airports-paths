@@ -1,0 +1,4 @@
+# Normalize line endings: store LF in the repository and check out the platform's
+# native endings. Without this the repo relies on each machine's core.autocrlf
+# setting, which produces spurious whole-file diffs when it differs across systems.
+* text=auto

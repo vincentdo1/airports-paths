@@ -1,0 +1,17 @@
+# Compiled objects and executables
+*.o
+*.exe
+
+# Extensionless binaries this project builds at the repo root
+/main
+/server
+/test
+/test_alg
+/testBFS
+/testRouting
+/testPool
+
+# Stray empty placeholder files that were committed by accident
+/first
+/second
+/IDmake
