@@ -1,10 +1,14 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import GlobeView from './components/GlobeView';
 import ControlPanel from './components/ControlPanel';
 import InfoCard from './components/InfoCard';
+import RoutePanel from './components/RoutePanel';
 import Tooltip from './components/Tooltip';
 import { useArcData } from './hooks/useArcData';
+import { useRoute } from './hooks/useRoute';
 import { useGlobeNavigation } from './hooks/useGlobeNavigation';
+import { enrichedAirports } from './utils/enrichAirports';
+import { buildRouteArcs } from './utils/routeArcs';
 import './AirportGlobe.css';
 
 const AirportGlobe = () => {
@@ -23,7 +27,29 @@ const AirportGlobe = () => {
     handleSliderCommit,
   } = useArcData();
 
+  const {
+    source, setSource,
+    destination, setDestination,
+    mode, setMode,
+    status, result, error, latency, path,
+    requestRoute,
+  } = useRoute();
+
   useGlobeNavigation(globeEl, selectedAirport);
+
+  // Arc objects for the currently returned route (empty until one is found).
+  const routeArcs = useMemo(() => buildRouteArcs(path), [path]);
+
+  // When a new route comes back, swing the camera to its origin so the drawn
+  // arc is actually in view.
+  useEffect(() => {
+    if (status === 'success' && path.length > 0 && globeEl.current) {
+      const start = enrichedAirports.find(a => a.id === path[0]);
+      if (start) {
+        globeEl.current.pointOfView({ lat: start.lat, lng: start.lng, altitude: 2.5 }, 1500);
+      }
+    }
+  }, [status, path]);
 
   // Reposition the tooltip via direct DOM writes — no setState, no re-renders.
   const handleMouseMove = useCallback((e) => {
@@ -50,6 +76,20 @@ const AirportGlobe = () => {
         onSliderCommit={handleSliderCommit}
       />
 
+      <RoutePanel
+        source={source}
+        destination={destination}
+        mode={mode}
+        onSourceChange={setSource}
+        onDestinationChange={setDestination}
+        onModeChange={setMode}
+        status={status}
+        result={result}
+        error={error}
+        latency={latency}
+        onFindRoute={requestRoute}
+      />
+
       <InfoCard selectedAirport={selectedAirport} />
 
       <Tooltip ref={tooltipRef} hoveredAirport={hoveredAirport} />
@@ -57,6 +97,7 @@ const AirportGlobe = () => {
       <GlobeView
         globeEl={globeEl}
         activeArcs={activeArcs}
+        routeArcs={routeArcs}
         onPointHover={handlePointHover}
         onPointClick={handlePointClick}
       />
