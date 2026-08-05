@@ -15,14 +15,14 @@ TEST_CASE("BFS Simple #1: 4 vertices, edges in a line, default call", "[weight=1
     graph.insertEdge("BC", graph.findVertex("B"), graph.findVertex("C"));
     graph.insertEdge("CD", graph.findVertex("C"), graph.findVertex("D"));
 
-    REQUIRE( graph.findVertex("A") != NULL );
-    REQUIRE( graph.findVertex("B") != NULL );
-    REQUIRE( graph.findVertex("C") != NULL );
-    REQUIRE( graph.findVertex("D") != NULL );
+    REQUIRE( graph.findVertex("A") != nullptr );
+    REQUIRE( graph.findVertex("B") != nullptr );
+    REQUIRE( graph.findVertex("C") != nullptr );
+    REQUIRE( graph.findVertex("D") != nullptr );
 
-    REQUIRE( graph.findEdge("AB") != NULL);
-    REQUIRE( graph.findEdge("BC") != NULL);
-    REQUIRE( graph.findEdge("CD") != NULL);
+    REQUIRE( graph.findEdge("AB") != nullptr);
+    REQUIRE( graph.findEdge("BC") != nullptr);
+    REQUIRE( graph.findEdge("CD") != nullptr);
 
     graph.BFSTraversal();
 }
@@ -40,25 +40,25 @@ TEST_CASE("BFS Simple #2: 4 vertices, edges in a line, custom call (start at C)"
     graph.insertEdge("BC", graph.findVertex("B"), graph.findVertex("C"));
     graph.insertEdge("CD", graph.findVertex("C"), graph.findVertex("D"));
 
-    REQUIRE( graph.findVertex("A") != NULL );
-    REQUIRE( graph.findVertex("B") != NULL );
-    REQUIRE( graph.findVertex("C") != NULL );
-    REQUIRE( graph.findVertex("D") != NULL );
+    REQUIRE( graph.findVertex("A") != nullptr );
+    REQUIRE( graph.findVertex("B") != nullptr );
+    REQUIRE( graph.findVertex("C") != nullptr );
+    REQUIRE( graph.findVertex("D") != nullptr );
 
-    REQUIRE( graph.findEdge("AB") != NULL);
-    REQUIRE( graph.findEdge("BC") != NULL);
-    REQUIRE( graph.findEdge("CD") != NULL);
+    REQUIRE( graph.findEdge("AB") != nullptr);
+    REQUIRE( graph.findEdge("BC") != nullptr);
+    REQUIRE( graph.findEdge("CD") != nullptr);
 
     graph.BFSTraversalID("C");
 
-    REQUIRE( graph.findVertex("A") != NULL );
-    REQUIRE( graph.findVertex("B") != NULL );
-    REQUIRE( graph.findVertex("C") != NULL );
-    REQUIRE( graph.findVertex("D") != NULL );
+    REQUIRE( graph.findVertex("A") != nullptr );
+    REQUIRE( graph.findVertex("B") != nullptr );
+    REQUIRE( graph.findVertex("C") != nullptr );
+    REQUIRE( graph.findVertex("D") != nullptr );
 
-    REQUIRE( graph.findEdge("AB") != NULL);
-    REQUIRE( graph.findEdge("BC") != NULL);
-    REQUIRE( graph.findEdge("CD") != NULL);
+    REQUIRE( graph.findEdge("AB") != nullptr);
+    REQUIRE( graph.findEdge("BC") != nullptr);
+    REQUIRE( graph.findEdge("CD") != nullptr);
 
 }
 
@@ -75,25 +75,25 @@ TEST_CASE("BFS Simple #3: 4 vertices, edges in a line, custom call (start at C)"
     graph.insertEdge("BC", graph.findVertex("B"), graph.findVertex("C"));
     graph.insertEdge("CD", graph.findVertex("C"), graph.findVertex("D"));
 
-    REQUIRE( graph.findVertex("A") != NULL );
-    REQUIRE( graph.findVertex("B") != NULL );
-    REQUIRE( graph.findVertex("C") != NULL );
-    REQUIRE( graph.findVertex("D") != NULL );
+    REQUIRE( graph.findVertex("A") != nullptr );
+    REQUIRE( graph.findVertex("B") != nullptr );
+    REQUIRE( graph.findVertex("C") != nullptr );
+    REQUIRE( graph.findVertex("D") != nullptr );
 
-    REQUIRE( graph.findEdge("AB") != NULL);
-    REQUIRE( graph.findEdge("BC") != NULL);
-    REQUIRE( graph.findEdge("CD") != NULL);
+    REQUIRE( graph.findEdge("AB") != nullptr);
+    REQUIRE( graph.findEdge("BC") != nullptr);
+    REQUIRE( graph.findEdge("CD") != nullptr);
 
     graph.BFSTraversalID("C");
 
-    REQUIRE( graph.findVertex("A") != NULL );
-    REQUIRE( graph.findVertex("B") != NULL );
-    REQUIRE( graph.findVertex("C") != NULL );
-    REQUIRE( graph.findVertex("D") != NULL );
+    REQUIRE( graph.findVertex("A") != nullptr );
+    REQUIRE( graph.findVertex("B") != nullptr );
+    REQUIRE( graph.findVertex("C") != nullptr );
+    REQUIRE( graph.findVertex("D") != nullptr );
 
-    REQUIRE( graph.findEdge("AB") != NULL);
-    REQUIRE( graph.findEdge("BC") != NULL);
-    REQUIRE( graph.findEdge("CD") != NULL);
+    REQUIRE( graph.findEdge("AB") != nullptr);
+    REQUIRE( graph.findEdge("BC") != nullptr);
+    REQUIRE( graph.findEdge("CD") != nullptr);
 
 }
 
@@ -123,53 +123,53 @@ TEST_CASE("BFS Complex #1: Lecture example, default call", "[weight=1]") {
     graph.insertEdge("FG", graph.findVertex("F"), graph.findVertex("G"));
     graph.insertEdge("GH", graph.findVertex("G"), graph.findVertex("H"));
 
-    REQUIRE( graph.findVertex("A") != NULL );
-    REQUIRE( graph.findVertex("B") != NULL );
-    REQUIRE( graph.findVertex("C") != NULL );
-    REQUIRE( graph.findVertex("D") != NULL );
-    REQUIRE( graph.findVertex("E") != NULL );
-    REQUIRE( graph.findVertex("F") != NULL );
-    REQUIRE( graph.findVertex("G") != NULL );
-    REQUIRE( graph.findVertex("H") != NULL );
+    REQUIRE( graph.findVertex("A") != nullptr );
+    REQUIRE( graph.findVertex("B") != nullptr );
+    REQUIRE( graph.findVertex("C") != nullptr );
+    REQUIRE( graph.findVertex("D") != nullptr );
+    REQUIRE( graph.findVertex("E") != nullptr );
+    REQUIRE( graph.findVertex("F") != nullptr );
+    REQUIRE( graph.findVertex("G") != nullptr );
+    REQUIRE( graph.findVertex("H") != nullptr );
 
-    REQUIRE( graph.findEdge("AB") != NULL);
-    REQUIRE( graph.findEdge("AC") != NULL);
-    REQUIRE( graph.findEdge("AD") != NULL);
-    REQUIRE( graph.findEdge("BC") != NULL);
-    REQUIRE( graph.findEdge("CD") != NULL);
-    REQUIRE( graph.findEdge("BE") != NULL);
-    REQUIRE( graph.findEdge("CE") != NULL);
-    REQUIRE( graph.findEdge("CF") != NULL);
-    REQUIRE( graph.findEdge("DF") != NULL);
-    REQUIRE( graph.findEdge("DH") != NULL);
-    REQUIRE( graph.findEdge("EG") != NULL);
-    REQUIRE( graph.findEdge("FG") != NULL);
-    REQUIRE( graph.findEdge("GH") != NULL);
+    REQUIRE( graph.findEdge("AB") != nullptr);
+    REQUIRE( graph.findEdge("AC") != nullptr);
+    REQUIRE( graph.findEdge("AD") != nullptr);
+    REQUIRE( graph.findEdge("BC") != nullptr);
+    REQUIRE( graph.findEdge("CD") != nullptr);
+    REQUIRE( graph.findEdge("BE") != nullptr);
+    REQUIRE( graph.findEdge("CE") != nullptr);
+    REQUIRE( graph.findEdge("CF") != nullptr);
+    REQUIRE( graph.findEdge("DF") != nullptr);
+    REQUIRE( graph.findEdge("DH") != nullptr);
+    REQUIRE( graph.findEdge("EG") != nullptr);
+    REQUIRE( graph.findEdge("FG") != nullptr);
+    REQUIRE( graph.findEdge("GH") != nullptr);
 
     graph.BFSTraversal();
 
-    REQUIRE( graph.findVertex("A") != NULL );
-    REQUIRE( graph.findVertex("B") != NULL );
-    REQUIRE( graph.findVertex("C") != NULL );
-    REQUIRE( graph.findVertex("D") != NULL );
-    REQUIRE( graph.findVertex("E") != NULL );
-    REQUIRE( graph.findVertex("F") != NULL );
-    REQUIRE( graph.findVertex("G") != NULL );
-    REQUIRE( graph.findVertex("H") != NULL );
+    REQUIRE( graph.findVertex("A") != nullptr );
+    REQUIRE( graph.findVertex("B") != nullptr );
+    REQUIRE( graph.findVertex("C") != nullptr );
+    REQUIRE( graph.findVertex("D") != nullptr );
+    REQUIRE( graph.findVertex("E") != nullptr );
+    REQUIRE( graph.findVertex("F") != nullptr );
+    REQUIRE( graph.findVertex("G") != nullptr );
+    REQUIRE( graph.findVertex("H") != nullptr );
 
-    REQUIRE( graph.findEdge("AB") != NULL);
-    REQUIRE( graph.findEdge("AC") != NULL);
-    REQUIRE( graph.findEdge("AD") != NULL);
-    REQUIRE( graph.findEdge("BC") != NULL);
-    REQUIRE( graph.findEdge("CD") != NULL);
-    REQUIRE( graph.findEdge("BE") != NULL);
-    REQUIRE( graph.findEdge("CE") != NULL);
-    REQUIRE( graph.findEdge("CF") != NULL);
-    REQUIRE( graph.findEdge("DF") != NULL);
-    REQUIRE( graph.findEdge("DH") != NULL);
-    REQUIRE( graph.findEdge("EG") != NULL);
-    REQUIRE( graph.findEdge("FG") != NULL);
-    REQUIRE( graph.findEdge("GH") != NULL);
+    REQUIRE( graph.findEdge("AB") != nullptr);
+    REQUIRE( graph.findEdge("AC") != nullptr);
+    REQUIRE( graph.findEdge("AD") != nullptr);
+    REQUIRE( graph.findEdge("BC") != nullptr);
+    REQUIRE( graph.findEdge("CD") != nullptr);
+    REQUIRE( graph.findEdge("BE") != nullptr);
+    REQUIRE( graph.findEdge("CE") != nullptr);
+    REQUIRE( graph.findEdge("CF") != nullptr);
+    REQUIRE( graph.findEdge("DF") != nullptr);
+    REQUIRE( graph.findEdge("DH") != nullptr);
+    REQUIRE( graph.findEdge("EG") != nullptr);
+    REQUIRE( graph.findEdge("FG") != nullptr);
+    REQUIRE( graph.findEdge("GH") != nullptr);
 
 }
 
@@ -199,53 +199,53 @@ TEST_CASE("BFS Complex #2: Lecture example, custom call start at A", "[weight=1]
     graph.insertEdge("FG", graph.findVertex("F"), graph.findVertex("G"));
     graph.insertEdge("GH", graph.findVertex("G"), graph.findVertex("H"));
 
-    REQUIRE( graph.findVertex("A") != NULL );
-    REQUIRE( graph.findVertex("B") != NULL );
-    REQUIRE( graph.findVertex("C") != NULL );
-    REQUIRE( graph.findVertex("D") != NULL );
-    REQUIRE( graph.findVertex("E") != NULL );
-    REQUIRE( graph.findVertex("F") != NULL );
-    REQUIRE( graph.findVertex("G") != NULL );
-    REQUIRE( graph.findVertex("H") != NULL );
+    REQUIRE( graph.findVertex("A") != nullptr );
+    REQUIRE( graph.findVertex("B") != nullptr );
+    REQUIRE( graph.findVertex("C") != nullptr );
+    REQUIRE( graph.findVertex("D") != nullptr );
+    REQUIRE( graph.findVertex("E") != nullptr );
+    REQUIRE( graph.findVertex("F") != nullptr );
+    REQUIRE( graph.findVertex("G") != nullptr );
+    REQUIRE( graph.findVertex("H") != nullptr );
 
-    REQUIRE( graph.findEdge("AB") != NULL);
-    REQUIRE( graph.findEdge("AC") != NULL);
-    REQUIRE( graph.findEdge("AD") != NULL);
-    REQUIRE( graph.findEdge("BC") != NULL);
-    REQUIRE( graph.findEdge("CD") != NULL);
-    REQUIRE( graph.findEdge("BE") != NULL);
-    REQUIRE( graph.findEdge("CE") != NULL);
-    REQUIRE( graph.findEdge("CF") != NULL);
-    REQUIRE( graph.findEdge("DF") != NULL);
-    REQUIRE( graph.findEdge("DH") != NULL);
-    REQUIRE( graph.findEdge("EG") != NULL);
-    REQUIRE( graph.findEdge("FG") != NULL);
-    REQUIRE( graph.findEdge("GH") != NULL);
+    REQUIRE( graph.findEdge("AB") != nullptr);
+    REQUIRE( graph.findEdge("AC") != nullptr);
+    REQUIRE( graph.findEdge("AD") != nullptr);
+    REQUIRE( graph.findEdge("BC") != nullptr);
+    REQUIRE( graph.findEdge("CD") != nullptr);
+    REQUIRE( graph.findEdge("BE") != nullptr);
+    REQUIRE( graph.findEdge("CE") != nullptr);
+    REQUIRE( graph.findEdge("CF") != nullptr);
+    REQUIRE( graph.findEdge("DF") != nullptr);
+    REQUIRE( graph.findEdge("DH") != nullptr);
+    REQUIRE( graph.findEdge("EG") != nullptr);
+    REQUIRE( graph.findEdge("FG") != nullptr);
+    REQUIRE( graph.findEdge("GH") != nullptr);
 
     graph.BFSTraversalID("A");
 
-    REQUIRE( graph.findVertex("A") != NULL );
-    REQUIRE( graph.findVertex("B") != NULL );
-    REQUIRE( graph.findVertex("C") != NULL );
-    REQUIRE( graph.findVertex("D") != NULL );
-    REQUIRE( graph.findVertex("E") != NULL );
-    REQUIRE( graph.findVertex("F") != NULL );
-    REQUIRE( graph.findVertex("G") != NULL );
-    REQUIRE( graph.findVertex("H") != NULL );
+    REQUIRE( graph.findVertex("A") != nullptr );
+    REQUIRE( graph.findVertex("B") != nullptr );
+    REQUIRE( graph.findVertex("C") != nullptr );
+    REQUIRE( graph.findVertex("D") != nullptr );
+    REQUIRE( graph.findVertex("E") != nullptr );
+    REQUIRE( graph.findVertex("F") != nullptr );
+    REQUIRE( graph.findVertex("G") != nullptr );
+    REQUIRE( graph.findVertex("H") != nullptr );
 
-    REQUIRE( graph.findEdge("AB") != NULL);
-    REQUIRE( graph.findEdge("AC") != NULL);
-    REQUIRE( graph.findEdge("AD") != NULL);
-    REQUIRE( graph.findEdge("BC") != NULL);
-    REQUIRE( graph.findEdge("CD") != NULL);
-    REQUIRE( graph.findEdge("BE") != NULL);
-    REQUIRE( graph.findEdge("CE") != NULL);
-    REQUIRE( graph.findEdge("CF") != NULL);
-    REQUIRE( graph.findEdge("DF") != NULL);
-    REQUIRE( graph.findEdge("DH") != NULL);
-    REQUIRE( graph.findEdge("EG") != NULL);
-    REQUIRE( graph.findEdge("FG") != NULL);
-    REQUIRE( graph.findEdge("GH") != NULL);
+    REQUIRE( graph.findEdge("AB") != nullptr);
+    REQUIRE( graph.findEdge("AC") != nullptr);
+    REQUIRE( graph.findEdge("AD") != nullptr);
+    REQUIRE( graph.findEdge("BC") != nullptr);
+    REQUIRE( graph.findEdge("CD") != nullptr);
+    REQUIRE( graph.findEdge("BE") != nullptr);
+    REQUIRE( graph.findEdge("CE") != nullptr);
+    REQUIRE( graph.findEdge("CF") != nullptr);
+    REQUIRE( graph.findEdge("DF") != nullptr);
+    REQUIRE( graph.findEdge("DH") != nullptr);
+    REQUIRE( graph.findEdge("EG") != nullptr);
+    REQUIRE( graph.findEdge("FG") != nullptr);
+    REQUIRE( graph.findEdge("GH") != nullptr);
 
 }
 
@@ -275,52 +275,52 @@ TEST_CASE("BFS Complex #3: Lecture example, custom call start at C", "[weight=1]
     graph.insertEdge("FG", graph.findVertex("F"), graph.findVertex("G"));
     graph.insertEdge("GH", graph.findVertex("G"), graph.findVertex("H"));
 
-    REQUIRE( graph.findVertex("A") != NULL );
-    REQUIRE( graph.findVertex("B") != NULL );
-    REQUIRE( graph.findVertex("C") != NULL );
-    REQUIRE( graph.findVertex("D") != NULL );
-    REQUIRE( graph.findVertex("E") != NULL );
-    REQUIRE( graph.findVertex("F") != NULL );
-    REQUIRE( graph.findVertex("G") != NULL );
-    REQUIRE( graph.findVertex("H") != NULL );
+    REQUIRE( graph.findVertex("A") != nullptr );
+    REQUIRE( graph.findVertex("B") != nullptr );
+    REQUIRE( graph.findVertex("C") != nullptr );
+    REQUIRE( graph.findVertex("D") != nullptr );
+    REQUIRE( graph.findVertex("E") != nullptr );
+    REQUIRE( graph.findVertex("F") != nullptr );
+    REQUIRE( graph.findVertex("G") != nullptr );
+    REQUIRE( graph.findVertex("H") != nullptr );
 
-    REQUIRE( graph.findEdge("AB") != NULL);
-    REQUIRE( graph.findEdge("AC") != NULL);
-    REQUIRE( graph.findEdge("AD") != NULL);
-    REQUIRE( graph.findEdge("BC") != NULL);
-    REQUIRE( graph.findEdge("CD") != NULL);
-    REQUIRE( graph.findEdge("BE") != NULL);
-    REQUIRE( graph.findEdge("CE") != NULL);
-    REQUIRE( graph.findEdge("CF") != NULL);
-    REQUIRE( graph.findEdge("DF") != NULL);
-    REQUIRE( graph.findEdge("DH") != NULL);
-    REQUIRE( graph.findEdge("EG") != NULL);
-    REQUIRE( graph.findEdge("FG") != NULL);
-    REQUIRE( graph.findEdge("GH") != NULL);
+    REQUIRE( graph.findEdge("AB") != nullptr);
+    REQUIRE( graph.findEdge("AC") != nullptr);
+    REQUIRE( graph.findEdge("AD") != nullptr);
+    REQUIRE( graph.findEdge("BC") != nullptr);
+    REQUIRE( graph.findEdge("CD") != nullptr);
+    REQUIRE( graph.findEdge("BE") != nullptr);
+    REQUIRE( graph.findEdge("CE") != nullptr);
+    REQUIRE( graph.findEdge("CF") != nullptr);
+    REQUIRE( graph.findEdge("DF") != nullptr);
+    REQUIRE( graph.findEdge("DH") != nullptr);
+    REQUIRE( graph.findEdge("EG") != nullptr);
+    REQUIRE( graph.findEdge("FG") != nullptr);
+    REQUIRE( graph.findEdge("GH") != nullptr);
 
     graph.BFSTraversalID("C");
 
-    REQUIRE( graph.findVertex("A") != NULL );
-    REQUIRE( graph.findVertex("B") != NULL );
-    REQUIRE( graph.findVertex("C") != NULL );
-    REQUIRE( graph.findVertex("D") != NULL );
-    REQUIRE( graph.findVertex("E") != NULL );
-    REQUIRE( graph.findVertex("F") != NULL );
-    REQUIRE( graph.findVertex("G") != NULL );
-    REQUIRE( graph.findVertex("H") != NULL );
+    REQUIRE( graph.findVertex("A") != nullptr );
+    REQUIRE( graph.findVertex("B") != nullptr );
+    REQUIRE( graph.findVertex("C") != nullptr );
+    REQUIRE( graph.findVertex("D") != nullptr );
+    REQUIRE( graph.findVertex("E") != nullptr );
+    REQUIRE( graph.findVertex("F") != nullptr );
+    REQUIRE( graph.findVertex("G") != nullptr );
+    REQUIRE( graph.findVertex("H") != nullptr );
 
-    REQUIRE( graph.findEdge("AB") != NULL);
-    REQUIRE( graph.findEdge("AC") != NULL);
-    REQUIRE( graph.findEdge("AD") != NULL);
-    REQUIRE( graph.findEdge("BC") != NULL);
-    REQUIRE( graph.findEdge("CD") != NULL);
-    REQUIRE( graph.findEdge("BE") != NULL);
-    REQUIRE( graph.findEdge("CE") != NULL);
-    REQUIRE( graph.findEdge("CF") != NULL);
-    REQUIRE( graph.findEdge("DF") != NULL);
-    REQUIRE( graph.findEdge("DH") != NULL);
-    REQUIRE( graph.findEdge("EG") != NULL);
-    REQUIRE( graph.findEdge("FG") != NULL);
-    REQUIRE( graph.findEdge("GH") != NULL);
+    REQUIRE( graph.findEdge("AB") != nullptr);
+    REQUIRE( graph.findEdge("AC") != nullptr);
+    REQUIRE( graph.findEdge("AD") != nullptr);
+    REQUIRE( graph.findEdge("BC") != nullptr);
+    REQUIRE( graph.findEdge("CD") != nullptr);
+    REQUIRE( graph.findEdge("BE") != nullptr);
+    REQUIRE( graph.findEdge("CE") != nullptr);
+    REQUIRE( graph.findEdge("CF") != nullptr);
+    REQUIRE( graph.findEdge("DF") != nullptr);
+    REQUIRE( graph.findEdge("DH") != nullptr);
+    REQUIRE( graph.findEdge("EG") != nullptr);
+    REQUIRE( graph.findEdge("FG") != nullptr);
+    REQUIRE( graph.findEdge("GH") != nullptr);
 
 }

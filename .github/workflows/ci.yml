@@ -1,0 +1,40 @@
+name: C++ CI
+
+on:
+  push:
+    paths:
+      - "**.cpp"
+      - "**.h"
+      - "**.hpp"
+      - "CMakeLists.txt"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    paths:
+      - "**.cpp"
+      - "**.h"
+      - "**.hpp"
+      - "CMakeLists.txt"
+      - ".github/workflows/ci.yml"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+      - name: Build
+        run: cmake --build build -j
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  sanitizers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure with AddressSanitizer + UndefinedBehaviorSanitizer
+        run: cmake -S . -B build-san -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=ON
+      - name: Build
+        run: cmake --build build-san -j
+      - name: Run routing and pool tests under sanitizers
+        run: ctest --test-dir build-san --output-on-failure -R "testRouting|testPool"

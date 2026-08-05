@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=gnu++11 -g -O0 -Wall -Wextra
+CXXFLAGS = -std=c++20 -g -O0 -Wall -Wextra
 
 # The server needs Winsock on Windows; the variable stays empty elsewhere.
 ifeq ($(OS),Windows_NT)

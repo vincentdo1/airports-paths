@@ -4,6 +4,7 @@
 #include <list>
 #include <string>
 #include <cmath>
+#include <numbers>
 #include <utility>
 #include <fstream>
 #include <queue>
@@ -86,10 +87,10 @@ AdjList::~AdjList(){
 double AdjList::distance(VertexNode* start, VertexNode* end){
     double radius;
     radius = (6356.752 + 6378.137) / 2.0; //average radius of Earth relative to poles and then equator
-    double dLat = ((end->latitude - start->latitude)*M_PI)/180.0;
-    double dLon = ((end->longitude - start->longitude)*M_PI)/180.0;
-    double startLat = start->latitude*M_PI/180.0;
-    double endLat = end->latitude*M_PI/180.0;
+    double dLat = ((end->latitude - start->latitude)*std::numbers::pi)/180.0;
+    double dLon = ((end->longitude - start->longitude)*std::numbers::pi)/180.0;
+    double startLat = start->latitude*std::numbers::pi/180.0;
+    double endLat = end->latitude*std::numbers::pi/180.0;
     double a = pow(std::sin(dLat/2),2)+pow(std::sin(dLon/2),2)*std::cos(startLat)*std::cos(endLat);
     double c = 2 * asin(sqrt(a));
     return radius*c;

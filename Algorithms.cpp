@@ -112,7 +112,7 @@ std::map<std::string, double> AdjList::BCAlgorithm() {
         }
 
     }
-    double nodes = vertexList.size();
+    double nodes = static_cast<double>(vertexList.size());
     for (std::list<VertexNode*>::iterator vertexItr1 = vertexList.begin(); vertexItr1 != vertexList.end(); vertexItr1++) {
         //loop through each map key
         for (auto it = mp.begin(); it != mp.end(); it++) {
