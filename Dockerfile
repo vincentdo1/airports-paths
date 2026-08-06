@@ -11,8 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY . .
-RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
-    && cmake --build build --target server -j 2
+RUN cmake --preset release \
+    && cmake --build --preset release --target server
 
 # ---- runtime stage: just the binary, its data, and the C++ runtime ----
 FROM debian:bookworm-slim AS runtime
@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --system --no-create-home app
 WORKDIR /app
-COPY --from=build /src/build/server /app/server
+COPY --from=build /src/build/release/server /app/server
 COPY data/ /app/data/
 COPY results/ /app/results/
 USER app

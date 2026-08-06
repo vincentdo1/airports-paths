@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.21)
 project(airport_routing LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -9,12 +9,20 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-add_compile_options(-Wall -Wextra)
+# Warning and sanitizer flags are GCC/Clang spelling; guard them so an MSVC build
+# (the promised Windows compatibility) isn't broken by unknown flags.
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  add_compile_options(-Wall -Wextra)
+endif()
 
 option(ENABLE_SANITIZERS "Build with AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 if(ENABLE_SANITIZERS)
-  add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
-  add_link_options(-fsanitize=address,undefined)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address,undefined)
+  else()
+    message(WARNING "ENABLE_SANITIZERS is only supported for GCC/Clang; ignoring")
+  endif()
 endif()
 
 find_package(Threads REQUIRED)
@@ -56,10 +64,7 @@ add_catch_test(test_alg     test_alg    airport_core)
 add_catch_test(testRouting  testRouting airport_core)
 add_catch_test(testPool     testPool    threadpool)
 
-# BFS traversal is a manual-inspection tool (it prints and has no assertions):
-# build it so a clean clone compiles everything, but don't register it as a test.
-add_executable(testBFS tests/testBFS.cpp)
-target_link_libraries(testBFS PRIVATE airport_core catch_main)
+add_catch_test(testBFS      testBFS     airport_core)
 
 # Integration smoke test: starts the server and checks the endpoints end to end,
 # including the request-hardening cases. Needs a POSIX shell + curl, so register it

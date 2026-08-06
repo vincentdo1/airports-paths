@@ -12,9 +12,17 @@ The source code is structured with three different files:
 - AdjList.cpp: implements basic methods to create and edit the graph implementation
 - Algorithms.cpp: implements FW and BC as well as helper methods for testing
 
-In addition we have a Makefile to allow for easy compilation of test cases.
-## Commands for Test Cases
-Run the following commands in terminal:\
+## Building and Testing
+The canonical build is CMake with CTest (C++20). Presets are defined in `CMakePresets.json`:
+```
+cmake --preset debug          # or: release, asan-ubsan
+cmake --build --preset debug
+ctest --preset debug
+```
+The server binary is `build/debug/server` (or `build/release/server`); it listens on `:8080` and is configured through environment variables (see the HTTP API section below).
+
+## Commands for Test Cases (legacy Makefile)
+In addition to CMake, the original Makefile still builds each target individually. Run the following commands in terminal:\
 make – compiles main.cpp\
 make test – compiles test/test.cpp\
 make test_alg – compiles test/test_alg.cpp\

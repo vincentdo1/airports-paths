@@ -46,4 +46,4 @@ catchmain.o: catch/catchmain.cpp
 
 .PHONY: clean
 clean:
-	rm -f *.o $(EXENAME) main
+	rm -f *.o *.exe main server test test_alg testBFS testRouting testPool

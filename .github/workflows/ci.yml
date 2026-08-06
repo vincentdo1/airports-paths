@@ -7,6 +7,7 @@ on:
       - "**.h"
       - "**.hpp"
       - "CMakeLists.txt"
+      - "CMakePresets.json"
       - "Dockerfile"
       - ".dockerignore"
       - ".github/workflows/ci.yml"
@@ -16,6 +17,7 @@ on:
       - "**.h"
       - "**.hpp"
       - "CMakeLists.txt"
+      - "CMakePresets.json"
       - "Dockerfile"
       - ".dockerignore"
       - ".github/workflows/ci.yml"
@@ -26,26 +28,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+        run: cmake --preset debug
       - name: Build
-        run: cmake --build build -j
+        run: cmake --build --preset debug
       - name: Test
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --preset debug
 
   sanitizers:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Configure with AddressSanitizer + UndefinedBehaviorSanitizer
-        run: cmake -S . -B build-san -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=ON
+      - name: Configure
+        run: cmake --preset asan-ubsan
       - name: Build
-        run: cmake --build build-san -j
+        run: cmake --build --preset asan-ubsan
       - name: Run routing and pool tests under sanitizers
-        run: ctest --test-dir build-san --output-on-failure -R "testRouting|testPool"
+        run: ctest --test-dir build/asan-ubsan --output-on-failure -R "testRouting|testPool"
 
   docker:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build Docker image
+      - name: Build image
         run: docker build -t airport-routing .
+      - name: Run container and issue a real route request
+        run: |
+          docker run -d --name airport -p 8080:8080 airport-routing
+          for _ in $(seq 1 30); do
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/readyz)" = "200" ]; then break; fi
+            sleep 1
+          done
+          curl -sf "http://localhost:8080/api/v1/routes?source=PEK&destination=JFK&mode=distance"
+          docker rm -f airport
