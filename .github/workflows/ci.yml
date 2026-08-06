@@ -7,6 +7,8 @@ on:
       - "**.h"
       - "**.hpp"
       - "CMakeLists.txt"
+      - "Dockerfile"
+      - ".dockerignore"
       - ".github/workflows/ci.yml"
   pull_request:
     paths:
@@ -14,6 +16,8 @@ on:
       - "**.h"
       - "**.hpp"
       - "CMakeLists.txt"
+      - "Dockerfile"
+      - ".dockerignore"
       - ".github/workflows/ci.yml"
 
 jobs:
@@ -38,3 +42,10 @@ jobs:
         run: cmake --build build-san -j
       - name: Run routing and pool tests under sanitizers
         run: ctest --test-dir build-san --output-on-failure -R "testRouting|testPool"
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t airport-routing .

@@ -469,7 +469,11 @@ int main() {
 
     //Configuration comes from the environment so the same binary can serve the
     //500 or 1000 airport set without recompiling. Defaults match the repo data.
-    int port = envInt("AIRPORT_PORT", 8080, 1, 65535);
+    //Hosting platforms (Fly.io, Render, ...) inject the listen port as PORT; fall
+    //back to our own AIRPORT_PORT, then the default.
+    int port = (getenv("PORT") != nullptr)
+                   ? envInt("PORT", 8080, 1, 65535)
+                   : envInt("AIRPORT_PORT", 8080, 1, 65535);
     unsigned int threads = (unsigned int)envInt("AIRPORT_THREADS", 4, 1, 256);
     unsigned int maxQueue = (unsigned int)envInt("AIRPORT_MAXQUEUE", 128, 1, 1000000);
     std::string nodesFile = envOr("AIRPORT_NODES", "data/nodes500.txt");
