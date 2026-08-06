@@ -60,3 +60,14 @@ add_catch_test(testPool     testPool    threadpool)
 # build it so a clean clone compiles everything, but don't register it as a test.
 add_executable(testBFS tests/testBFS.cpp)
 target_link_libraries(testBFS PRIVATE airport_core catch_main)
+
+# Integration smoke test: starts the server and checks the endpoints end to end,
+# including the request-hardening cases. Needs a POSIX shell + curl, so register it
+# only on Unix-like systems (including the Linux CI runner).
+if(UNIX)
+  add_test(
+    NAME api_integration
+    COMMAND bash ${CMAKE_SOURCE_DIR}/tests/api_test.sh $<TARGET_FILE:server>
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  )
+endif()

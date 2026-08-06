@@ -74,6 +74,36 @@ static std::string envOr(const char* key, const std::string& fallback) {
     return value ? std::string(value) : fallback;
 }
 
+//Parse a plain signed integer. Returns false if the whole string isn't one.
+static bool parseInt(const std::string& s, int& out) {
+    if(s.empty()){
+        return false;
+    }
+    char* endp = nullptr;
+    long value = std::strtol(s.c_str(), &endp, 10);
+    if(*endp != '\0'){
+        return false;
+    }
+    out = (int)value;
+    return true;
+}
+
+//Read an integer setting from the environment, clamped to [lo, hi]. A missing
+//variable uses the default; a malformed or out-of-range value stops startup, so a
+//misconfiguration fails loudly here instead of silently wrapping into nonsense.
+static int envInt(const char* key, int fallback, int lo, int hi) {
+    const char* raw = getenv(key);
+    if(raw == nullptr || raw[0] == '\0'){
+        return fallback;
+    }
+    int value = 0;
+    if(!parseInt(std::string(raw), value) || value < lo || value > hi){
+        std::cerr << "invalid " << key << ": '" << raw << "' (expected " << lo << ".." << hi << ")\n";
+        std::exit(1);
+    }
+    return value;
+}
+
 //Airport codes in the data are upper case, so normalize whatever the client sends.
 static std::string toUpper(std::string s) {
     for(unsigned long i = 0; i < s.size(); i++){
@@ -149,6 +179,7 @@ static std::string statusText(int status) {
         case 400: return "Bad Request";
         case 404: return "Not Found";
         case 405: return "Method Not Allowed";
+        case 413: return "Payload Too Large";
         case 503: return "Service Unavailable";
         default:  return "Internal Server Error";
     }
@@ -298,12 +329,11 @@ static std::pair<int, std::string> handleCentral(ServerContext* ctx, const std::
     int limit = 20;
     std::string limitStr = queryParam(query, "limit");
     if(!limitStr.empty()){
-        limit = atoi(limitStr.c_str());
+        if(!parseInt(limitStr, limit) || limit < 0){
+            return std::make_pair(400, jsonError("INVALID_PARAMETER", "limit must be a non-negative integer"));
+        }
     }
     //Keep the response bounded no matter what the client asks for.
-    if(limit < 0){
-        limit = 0;
-    }
     if(limit > 500){
         limit = 500;
     }
@@ -337,27 +367,50 @@ static void setReadTimeout(socket_t sock, int seconds) {
 #endif
 }
 
-//Read the request until the blank line that ends the HTTP headers. GET requests
-//carry no body, so that blank line means we have the whole request.
-static std::string readRequest(socket_t client) {
+//The most request-header bytes we'll read. A GET has no body, so this only needs
+//to fit the request line plus a handful of headers; anything larger is rejected.
+static const std::string::size_type MAX_REQUEST_BYTES = 16384;
+
+//Read the request headers, up to the blank line that ends them. Sets 'complete'
+//once that blank line is seen, and 'tooLarge' if we hit the byte cap before it.
+static std::string readRequest(socket_t client, bool& complete, bool& tooLarge) {
     std::string data;
     char buf[4096];
-    while(data.find("\r\n\r\n") == std::string::npos){
+    complete = false;
+    tooLarge = false;
+    while(true){
+        if(data.find("\r\n\r\n") != std::string::npos){
+            complete = true;
+            break;
+        }
+        if(data.size() >= MAX_REQUEST_BYTES){
+            tooLarge = true;
+            break;
+        }
         int n = recv(client, buf, sizeof(buf), 0);
         if(n <= 0){
+            //Client closed or the read timed out before finishing the headers.
             break;
         }
         data.append(buf, n);
-        //Don't let a client stream headers at us forever.
-        if(data.size() > 65536){
-            break;
-        }
     }
     return data;
 }
 
 static void handleConnection(socket_t client, ServerContext* ctx) {
-    std::string request = readRequest(client);
+    bool complete = false;
+    bool tooLarge = false;
+    std::string request = readRequest(client, complete, tooLarge);
+    if(tooLarge){
+        sendAll(client, httpResponse(413, jsonError("REQUEST_TOO_LARGE", "Request header exceeded the size limit")));
+        closeSocket(client);
+        return;
+    }
+    if(!complete){
+        sendAll(client, httpResponse(400, jsonError("BAD_REQUEST", "Incomplete request")));
+        closeSocket(client);
+        return;
+    }
     //Parse the request line: METHOD TARGET VERSION.
     std::string firstLine = request.substr(0, request.find("\r\n"));
     std::istringstream iss(firstLine);
@@ -381,6 +434,13 @@ static void handleConnection(socket_t client, ServerContext* ctx) {
         const std::string airportPrefix = "/api/v1/airports/";
         if(path == "/healthz"){
             result = std::make_pair(200, std::string("{\"status\":\"ok\"}"));
+        } else if(path == "/readyz"){
+            //The graph loads once at startup (and startup aborts if it's empty), so
+            //if we're serving at all the graph is ready to answer route queries.
+            std::ostringstream ready;
+            ready << "{\"status\":\"ready\",\"airports\":" << ctx->graph->vertexList.size()
+                  << ",\"routes\":" << ctx->graph->edgeList.size() << "}";
+            result = std::make_pair(200, ready.str());
         } else if(path == "/api/v1/routes"){
             result = handleRoutes(ctx, query);
         } else if(path == "/api/v1/network/central-airports"){
@@ -409,9 +469,9 @@ int main() {
 
     //Configuration comes from the environment so the same binary can serve the
     //500 or 1000 airport set without recompiling. Defaults match the repo data.
-    int port = atoi(envOr("AIRPORT_PORT", "8080").c_str());
-    unsigned int threads = (unsigned int)atoi(envOr("AIRPORT_THREADS", "4").c_str());
-    unsigned int maxQueue = (unsigned int)atoi(envOr("AIRPORT_MAXQUEUE", "128").c_str());
+    int port = envInt("AIRPORT_PORT", 8080, 1, 65535);
+    unsigned int threads = (unsigned int)envInt("AIRPORT_THREADS", 4, 1, 256);
+    unsigned int maxQueue = (unsigned int)envInt("AIRPORT_MAXQUEUE", 128, 1, 1000000);
     std::string nodesFile = envOr("AIRPORT_NODES", "data/nodes500.txt");
     std::string edgesFile = envOr("AIRPORT_EDGES", "data/edges500.txt");
     std::string bcFile = envOr("AIRPORT_CENTRALITY", "results/Sorted500BC.txt");
@@ -432,6 +492,13 @@ int main() {
     std::cout << "  port:       " << port << "\n";
     std::cout << "  threads:    " << threads << "\n";
     std::cout << "  max queue:  " << maxQueue << "\n";
+
+    //Refuse to start on an empty graph: a missing or unreadable dataset should fail
+    //loudly here rather than quietly answering 404 for every route.
+    if(graph.vertexList.empty()){
+        std::cerr << "no airports loaded from " << nodesFile << "; refusing to start\n";
+        return 1;
+    }
 
     g_listen = socket(AF_INET, SOCK_STREAM, 0);
     if(g_listen == BAD_SOCKET){
