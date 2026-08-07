@@ -4,6 +4,7 @@
 #include <list>
 #include <string>
 #include <cmath>
+#include <numbers>
 #include <utility>
 #include <fstream>
 #include <queue>
@@ -78,26 +79,18 @@ AdjList::~AdjList(){
     }
 }
 
-// and assignment ctor
-AdjList& AdjList::operator=(const AdjList &other){
-    auto temp = other;
-    return *this;
-}
-
-// copy ctor
-AdjList::AdjList(const AdjList& rhs){
-    AdjList temp = rhs;
-}
+// Copy construction and assignment are deleted in the header (this graph is loaded
+// once and then only read), so there is nothing to define here.
 
 //Calculate distance between two nodes via Haversine formula (on Wikipedia). This calculation doesn't have
 //to be particularly precise.
 double AdjList::distance(VertexNode* start, VertexNode* end){
     double radius;
     radius = (6356.752 + 6378.137) / 2.0; //average radius of Earth relative to poles and then equator
-    double dLat = ((end->latitude - start->latitude)*M_PI)/180.0;
-    double dLon = ((end->longitude - start->longitude)*M_PI)/180.0;
-    double startLat = start->latitude*M_PI/180.0;
-    double endLat = end->latitude*M_PI/180.0;
+    double dLat = ((end->latitude - start->latitude)*std::numbers::pi)/180.0;
+    double dLon = ((end->longitude - start->longitude)*std::numbers::pi)/180.0;
+    double startLat = start->latitude*std::numbers::pi/180.0;
+    double endLat = end->latitude*std::numbers::pi/180.0;
     double a = pow(std::sin(dLat/2),2)+pow(std::sin(dLon/2),2)*std::cos(startLat)*std::cos(endLat);
     double c = 2 * asin(sqrt(a));
     return radius*c;
@@ -297,8 +290,8 @@ void AdjList::removeEdge(std::string name){
     {
         if((*enditr)->ID == edgePtr->ID)
         {
-            //Delete from destination's edges list
-            destPtr->edges.erase(enditr);
+            //Delete from destination's asEnd list (the edge lives there, not in edges)
+            destPtr->asEnd.erase(enditr);
             break;
         }
     }

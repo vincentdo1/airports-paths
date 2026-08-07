@@ -1,0 +1,25 @@
+# Keep the build context small: the image only needs the C++ sources, CMakeLists,
+# the vendored Catch header, and the data/ and results/ files.
+.git
+.github
+.claude
+.vscode
+outline
+docs
+visual-graph
+build
+build-san
+
+# Local build outputs (also gitignored)
+*.o
+*.exe
+main
+server
+test
+test_alg
+testBFS
+testRouting
+testPool
+first
+second
+IDmake

@@ -7,6 +7,7 @@
 #include <cmath>
 #include <queue>
 #include <map>
+#include <vector>
 
 class AdjList
 {
@@ -43,11 +44,12 @@ class AdjList
     //dtor
     ~AdjList();
 
-    //and assignment ctor
-    AdjList& operator =(const AdjList &other);
-
-    //copy ctor
-    AdjList(const AdjList& rhs);
+    //This graph owns raw pointers and is only ever loaded once and then read, so
+    //copying it doesn't make sense. Deleting these also retires the old copy ctor
+    //and assignment, which were broken (the copy ctor recursed into itself and the
+    //assignment left the target unchanged).
+    AdjList& operator =(const AdjList &other) = delete;
+    AdjList(const AdjList& rhs) = delete;
     //*******************
 
     //Calculate distance between two nodes
@@ -85,4 +87,11 @@ class AdjList
     std::pair<std::string, double> FWSingleOutput(std::string start, std::string end);
 
     double getShortestDistance(std::string start, std::string end);
+
+    //BFS shortest path (fewest hops) between two airports
+    std::vector<std::string> BFSPath(std::string start, std::string end);
+
+    //Dijkstra's shortest path by distance between two airports
+    //first is the path in order, second is the total distance
+    std::pair<std::vector<std::string>, double> DijkstraPath(std::string start, std::string end);
 };

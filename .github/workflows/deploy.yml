@@ -30,6 +30,8 @@ jobs:
 
       - name: Build
         working-directory: visual-graph
+        env:
+          REACT_APP_API_URL: ${{ vars.REACT_APP_API_URL || 'https://airport-routing-vmd306.fly.dev' }}
         run: npm run build
 
       - name: Update docs/
