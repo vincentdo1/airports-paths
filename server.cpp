@@ -12,6 +12,9 @@
 #include <cstring>
 #include <cstdlib>
 #include <cctype>
+#include <cerrno>
+#include <climits>
+#include <chrono>
 
 /*
     A small HTTP/JSON front end for the airport graph. The graph and the
@@ -83,9 +86,11 @@ static bool parseInt(const std::string& s, int& out) {
     if(s.empty()){
         return false;
     }
+    errno = 0;
     char* endp = nullptr;
     long value = std::strtol(s.c_str(), &endp, 10);
-    if(*endp != '\0'){
+    //Reject trailing junk, strtol's own overflow, and values that don't fit in int.
+    if(*endp != '\0' || errno == ERANGE || value < INT_MIN || value > INT_MAX){
         return false;
     }
     out = (int)value;
@@ -379,16 +384,15 @@ static std::pair<int, std::string> handleCentral(ServerContext* ctx, const std::
 
 //------------------------------ connection handling --------------------------
 
-//Give up on a client that is too slow to send its request, so one stalled
-//connection can't tie up a worker thread indefinitely.
-static void setReadTimeout(socket_t sock, int seconds) {
+//Set the socket receive timeout to a number of milliseconds.
+static void setRecvTimeoutMs(socket_t sock, int ms) {
 #ifdef _WIN32
-    DWORD ms = (DWORD)(seconds * 1000);
-    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&ms, sizeof(ms));
+    DWORD t = (DWORD)ms;
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&t, sizeof(t));
 #else
     struct timeval tv;
-    tv.tv_sec = seconds;
-    tv.tv_usec = 0;
+    tv.tv_sec = ms / 1000;
+    tv.tv_usec = (ms % 1000) * 1000;
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
 #endif
 }
@@ -397,28 +401,57 @@ static void setReadTimeout(socket_t sock, int seconds) {
 //to fit the request line plus a handful of headers; anything larger is rejected.
 static const std::string::size_type MAX_REQUEST_BYTES = 16384;
 
-//Read the request headers, up to the blank line that ends them. Sets 'complete'
-//once that blank line is seen, and 'tooLarge' if we hit the byte cap before it.
+//Total time a client gets to send its headers. This is a whole-request deadline,
+//not a per-read idle gap, so a client that dribbles one byte at a time still can't
+//hold a worker much past this.
+static const int REQUEST_DEADLINE_MS = 5000;
+
+//Read the request headers up to the blank line that ends them. Sets 'complete' when
+//that blank line arrives within the size cap, and 'tooLarge' if the headers run past
+//the cap. The end-of-headers marker is checked by position (not merely "seen"), a
+//total deadline is enforced across all reads, and we never buffer past the cap.
 static std::string readRequest(socket_t client, bool& complete, bool& tooLarge) {
     std::string data;
     char buf[4096];
     complete = false;
     tooLarge = false;
+    std::chrono::steady_clock::time_point deadline =
+        std::chrono::steady_clock::now() + std::chrono::milliseconds(REQUEST_DEADLINE_MS);
     while(true){
-        if(data.find("\r\n\r\n") != std::string::npos){
-            complete = true;
+        std::string::size_type marker = data.find("\r\n\r\n");
+        if(marker != std::string::npos){
+            //Headers ended; accept only if they fit within the cap.
+            if(marker + 4 > MAX_REQUEST_BYTES){
+                tooLarge = true;
+            } else {
+                complete = true;
+            }
             break;
         }
         if(data.size() >= MAX_REQUEST_BYTES){
+            //Ran past the cap without an end-of-headers marker.
             tooLarge = true;
             break;
         }
-        int n = recv(client, buf, sizeof(buf), 0);
-        if(n <= 0){
-            //Client closed or the read timed out before finishing the headers.
+        //Stop once the total deadline passes, even if bytes keep trickling in.
+        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+        if(now >= deadline){
             break;
         }
-        data.append(buf, n);
+        int remainingMs = (int)std::chrono::duration_cast<std::chrono::milliseconds>(deadline - now).count();
+        if(remainingMs < 1){
+            remainingMs = 1;
+        }
+        setRecvTimeoutMs(client, remainingMs);
+        //Never read more than the remaining header allowance.
+        std::string::size_type room = (MAX_REQUEST_BYTES + 4) - data.size();
+        int want = (int)std::min<std::string::size_type>(sizeof(buf), room);
+        int n = recv(client, buf, want, 0);
+        if(n <= 0){
+            //Closed, or the receive timed out (client too slow) — stop.
+            break;
+        }
+        data.append(buf, (unsigned long)n);
     }
     return data;
 }
@@ -524,10 +557,18 @@ int main() {
     std::cout << "  threads:    " << threads << "\n";
     std::cout << "  max queue:  " << maxQueue << "\n";
 
-    //Refuse to start on an empty graph: a missing or unreadable dataset should fail
-    //loudly here rather than quietly answering 404 for every route.
+    //Refuse to start unless every required input actually loaded: a missing or
+    //unreadable dataset should fail loudly here, not quietly serve empty results.
     if(graph.vertexList.empty()){
         std::cerr << "no airports loaded from " << nodesFile << "; refusing to start\n";
+        return 1;
+    }
+    if(graph.edgeList.empty()){
+        std::cerr << "no routes loaded from " << edgesFile << "; refusing to start\n";
+        return 1;
+    }
+    if(centrality.empty()){
+        std::cerr << "no centrality loaded from " << bcFile << "; refusing to start\n";
         return 1;
     }
 
@@ -568,8 +609,6 @@ int main() {
                 //accept() was interrupted, almost always by shutdown closing the socket.
                 break;
             }
-            //Don't let a stalled client hold a worker forever.
-            setReadTimeout(client, 5);
             ServerContext* cptr = &ctx;
             if(!pool.submit([client, cptr]{ handleConnection(client, cptr); })){
                 //Backlog is full: reply with an explicit overload status and move on.
