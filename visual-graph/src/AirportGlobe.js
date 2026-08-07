@@ -7,7 +7,6 @@ import Tooltip from './components/Tooltip';
 import { useArcData } from './hooks/useArcData';
 import { useRoute } from './hooks/useRoute';
 import { useGlobeNavigation } from './hooks/useGlobeNavigation';
-import { enrichedAirports } from './utils/enrichAirports';
 import { buildRouteArcs } from './utils/routeArcs';
 import './AirportGlobe.css';
 
@@ -31,25 +30,25 @@ const AirportGlobe = () => {
     source, setSource,
     destination, setDestination,
     mode, setMode,
-    status, result, error, latency, path,
+    status, result, error, latency, coordinates,
     requestRoute,
   } = useRoute();
 
   useGlobeNavigation(globeEl, selectedAirport);
 
   // Arc objects for the currently returned route (empty until one is found).
-  const routeArcs = useMemo(() => buildRouteArcs(path), [path]);
+  const routeArcs = useMemo(() => buildRouteArcs(coordinates), [coordinates]);
 
   // When a new route comes back, swing the camera to its origin so the drawn
   // arc is actually in view.
   useEffect(() => {
-    if (status === 'success' && path.length > 0 && globeEl.current) {
-      const start = enrichedAirports.find(a => a.id === path[0]);
-      if (start) {
-        globeEl.current.pointOfView({ lat: start.lat, lng: start.lng, altitude: 2.5 }, 1500);
-      }
+    if (status === 'success' && coordinates.length > 0 && globeEl.current) {
+      globeEl.current.pointOfView(
+        { lat: coordinates[0].lat, lng: coordinates[0].lng, altitude: 2.5 },
+        1500
+      );
     }
-  }, [status, path]);
+  }, [status, coordinates]);
 
   // Reposition the tooltip via direct DOM writes — no setState, no re-renders.
   const handleMouseMove = useCallback((e) => {

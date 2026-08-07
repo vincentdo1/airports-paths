@@ -10,6 +10,7 @@ const ERROR_TITLES = {
   UNSUPPORTED_MODE:   'Unsupported mode',
   OVERLOADED:         'Server busy',
   SERVER_UNAVAILABLE: 'Service offline',
+  TIMEOUT:            'Timed out',
 };
 
 const RoutePanel = ({

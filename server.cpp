@@ -60,6 +60,10 @@ struct ServerContext {
 static volatile sig_atomic_t g_running = 1;
 static socket_t g_listen = BAD_SOCKET;
 
+//Which origin the browser client may call us from (CORS). Defaults to "*"; set
+//AIRPORT_CORS_ORIGIN to restrict it to a specific site.
+static std::string g_corsOrigin = "*";
+
 static void onSignal(int) {
     g_running = 0;
     if(g_listen != BAD_SOCKET){
@@ -208,6 +212,26 @@ static std::string numberToString(double value) {
     return out.str();
 }
 
+//Emit each airport on the path with its coordinates, so the client can draw the
+//route straight from the response instead of keeping its own coordinate table.
+static std::string coordsToJson(ServerContext* ctx, const std::vector<std::string>& path) {
+    std::string out = "[";
+    for(unsigned long i = 0; i < path.size(); i++){
+        AdjList::VertexNode* v = ctx->graph->findVertex(path[i]);
+        if(v == nullptr){
+            continue;
+        }
+        if(out.size() > 1){
+            out += ",";
+        }
+        out += "{\"code\":\"" + jsonEscape(v->ID) + "\","
+               "\"lat\":" + numberToString(v->latitude) + ","
+               "\"lng\":" + numberToString(v->longitude) + "}";
+    }
+    out += "]";
+    return out;
+}
+
 //Wrap a status and JSON body in a complete HTTP/1.1 response. We always close the
 //connection afterwards, and allow cross-origin reads so the browser client can
 //call the API directly.
@@ -216,7 +240,7 @@ static std::string httpResponse(int status, const std::string& body) {
     res << "HTTP/1.1 " << status << " " << statusText(status) << "\r\n";
     res << "Content-Type: application/json\r\n";
     res << "Content-Length: " << body.size() << "\r\n";
-    res << "Access-Control-Allow-Origin: *\r\n";
+    res << "Access-Control-Allow-Origin: " << g_corsOrigin << "\r\n";
     res << "Connection: close\r\n";
     res << "\r\n";
     res << body;
@@ -308,7 +332,8 @@ static std::pair<int, std::string> handleRoutes(ServerContext* ctx, const std::s
              << "\"destination\":\"" << jsonEscape(destination) << "\","
              << "\"mode\":\"hops\",\"algorithm\":\"bfs\","
              << "\"path\":" << pathToJson(route) << ","
-             << "\"hops\":" << (route.size() - 1) << "}";
+             << "\"hops\":" << (route.size() - 1) << ","
+             << "\"coordinates\":" << coordsToJson(ctx, route) << "}";
     } else {
         std::pair<std::vector<std::string>, double> route = ctx->graph->DijkstraPath(source, destination);
         if(route.first.empty()){
@@ -319,7 +344,8 @@ static std::pair<int, std::string> handleRoutes(ServerContext* ctx, const std::s
              << "\"mode\":\"distance\",\"algorithm\":\"dijkstra\","
              << "\"path\":" << pathToJson(route.first) << ","
              << "\"hops\":" << (route.first.size() - 1) << ","
-             << "\"distanceKm\":" << numberToString(route.second) << "}";
+             << "\"distanceKm\":" << numberToString(route.second) << ","
+             << "\"coordinates\":" << coordsToJson(ctx, route.first) << "}";
     }
     return std::make_pair(200, body.str());
 }
@@ -479,6 +505,7 @@ int main() {
     std::string nodesFile = envOr("AIRPORT_NODES", "data/nodes500.txt");
     std::string edgesFile = envOr("AIRPORT_EDGES", "data/edges500.txt");
     std::string bcFile = envOr("AIRPORT_CENTRALITY", "results/Sorted500BC.txt");
+    g_corsOrigin = envOr("AIRPORT_CORS_ORIGIN", "*");
 
     //Load the graph once. From here on it is read-only, so the workers share it.
     AdjList graph(nodesFile, edgesFile);
