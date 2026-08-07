@@ -6,8 +6,8 @@
 #
 # Fly terminates HTTPS in front of the service (required: GitHub Pages is HTTPS and
 # can't call an HTTP API), so the browser client talks to https://<app>.fly.dev.
+app = "airport-routing-vmd306"
 
-app = "airport-routing"   # change to your own globally-unique app name
 primary_region = "iad"    # pick a region near you (see: fly platform regions)
 
 [build]
