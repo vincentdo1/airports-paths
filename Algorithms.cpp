@@ -180,27 +180,20 @@ std::map<std::string, double> AdjList::BCAlgorithm() {
     return toreturn;
 }
 
-//BFS shortest path between two airports. When all we care about is the number of
-//connections, the graph is effectively unweighted, so a plain BFS out of the
-//start airport reaches every airport in the fewest hops possible. We walk the
-//outgoing edges of each airport, remember where we came from, and rebuild the
-//path once the destination pops out. Returns the airports in order (start ... end),
-//or an empty vector if the destination can't be reached or an airport is unknown.
+//Fewest-hop path. Hops ignore edge weight, so plain BFS is enough.
+//Empty vector if unreachable or an airport is unknown.
 std::vector<std::string> AdjList::BFSPath(std::string start, std::string end){
     std::vector<std::string> path;
     VertexNode* startVertex = findVertex(start);
     VertexNode* endVertex = findVertex(end);
-    //Can't route between airports that aren't in the graph
     if(startVertex == NULL || endVertex == NULL){
         return path;
     }
-    //Same airport, so the path is just that airport (zero hops)
     if(start == end){
         path.push_back(start);
         return path;
     }
-    //cameFrom remembers which airport we reached each airport from so we can
-    //rebuild the path at the end. An airport being in the map also marks it visited.
+    //cameFrom doubles as the visited set
     std::map<std::string, std::string> cameFrom;
     std::queue<VertexNode*> q;
     q.push(startVertex);
@@ -209,9 +202,8 @@ std::vector<std::string> AdjList::BFSPath(std::string start, std::string end){
     while(!q.empty() && !found){
         VertexNode* v = q.front();
         q.pop();
-        //Edges are stored on their source, so ends.second is always the neighbor.
-        //We visit them in insertion order, which keeps the result deterministic
-        //when several equal-hop paths exist (first one discovered wins).
+        //edges live on their source, so ends.second is the neighbor. Insertion
+        //order keeps ties deterministic: first equal-hop path discovered wins.
         for(std::list<EdgeNode*>::iterator itrEdge = v->edges.begin(); itrEdge != v->edges.end(); itrEdge++){
             VertexNode* w = (*itrEdge)->ends.second;
             if(cameFrom.find(w->ID) == cameFrom.end()){
@@ -224,11 +216,10 @@ std::vector<std::string> AdjList::BFSPath(std::string start, std::string end){
             }
         }
     }
-    //If we never reached the destination then there is no route
     if(cameFrom.find(end) == cameFrom.end()){
         return path;
     }
-    //Walk backwards from the destination to the start, then flip it around
+    //walk back from the destination, then flip
     std::string cur = end;
     while(cur != start){
         path.push_back(cur);
@@ -239,12 +230,8 @@ std::vector<std::string> AdjList::BFSPath(std::string start, std::string end){
     return path;
 }
 
-//Dijkstra's shortest path by distance between two airports. Every edge already
-//knows its length in kilometers (set when the edge is inserted), so we run a
-//standard Dijkstra out of the start airport: repeatedly expand the closest airport
-//we haven't finalized yet and relax its outgoing edges. first is the path in order,
-//second is the total distance travelled. An empty path means the destination can't
-//be reached or an airport is unknown.
+//Shortest path by distance. Edges carry their length in km from insertEdge().
+//first is the path, second the total distance. Empty path if unreachable.
 std::pair<std::vector<std::string>, double> AdjList::DijkstraPath(std::string start, std::string end){
     std::vector<std::string> path;
     VertexNode* startVertex = findVertex(start);
@@ -256,33 +243,28 @@ std::pair<std::vector<std::string>, double> AdjList::DijkstraPath(std::string st
         path.push_back(start);
         return std::pair<std::vector<std::string>, double>(path, 0);
     }
-    //Index the airports by ID once up front so that during relaxation we can jump
-    //straight from an ID to its node instead of scanning the whole vertex list.
+    //index once so relaxation doesn't rescan vertexList each time
     std::map<std::string, VertexNode*> lookup;
     for(std::list<VertexNode*>::iterator itr = vertexList.begin(); itr != vertexList.end(); itr++){
         lookup[(*itr)->ID] = *itr;
     }
-    //dist is the best distance found so far to each airport, cameFrom is the airport
-    //we got there from. Everything starts at infinity except the start airport.
     std::map<std::string, double> dist;
     std::map<std::string, std::string> cameFrom;
     for(std::list<VertexNode*>::iterator itr = vertexList.begin(); itr != vertexList.end(); itr++){
         dist[(*itr)->ID] = INFINITY;
     }
     dist[start] = 0;
-    //A min-heap keyed on distance, so the top is always the closest airport left.
-    //Ties on distance fall back to the airport ID, which keeps results deterministic.
+    //min-heap on distance; ties fall back to ID so results stay deterministic
     std::priority_queue<std::pair<double, std::string>, std::vector<std::pair<double, std::string> >, std::greater<std::pair<double, std::string> > > pq;
     pq.push(std::make_pair(0.0, start));
     while(!pq.empty()){
         double d = pq.top().first;
         std::string uID = pq.top().second;
         pq.pop();
-        //A stale entry left behind by an earlier, longer relaxation
+        //stale entry from an earlier, longer relaxation
         if(d > dist[uID]){
             continue;
         }
-        //Once we finalize the destination we can stop early
         if(uID == end){
             break;
         }
@@ -297,7 +279,6 @@ std::pair<std::vector<std::string>, double> AdjList::DijkstraPath(std::string st
             }
         }
     }
-    //Unreachable: no finite distance was ever recorded for the destination
     if(dist[end] == INFINITY){
         return std::pair<std::vector<std::string>, double>(path, 0);
     }

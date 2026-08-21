@@ -1,6 +1,7 @@
 # Compiled objects and executables
 *.o
 *.exe
+*.dSYM/
 
 # Extensionless binaries this project builds at the repo root
 /main
@@ -11,7 +12,7 @@
 /testRouting
 /testPool
 
-# Stray empty placeholder files that were committed by accident
+# empty placeholders committed by accident
 /first
 /second
 /IDmake

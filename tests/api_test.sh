@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
-# Integration smoke test for the HTTP service. Starts the server on a test port,
-# waits for it to become ready, exercises every endpoint (happy paths, error cases,
-# and the request-hardening cases), and checks the HTTP status codes. Invoked by
-# CTest with the server binary path as $1, run from the repository root so the data
-# files resolve. Exits non-zero if any check fails.
+# Endpoint smoke test. CTest passes the server binary as $1 and runs this from the
+# repo root so the data paths resolve.
 set -u
 
 SERVER="${1:-./build/server}"
@@ -16,7 +13,7 @@ AIRPORT_PORT="$PORT" "$SERVER" >"$LOG" 2>&1 &
 SERVER_PID=$!
 trap 'kill "$SERVER_PID" 2>/dev/null' EXIT
 
-# Wait up to ~10s for readiness.
+# wait ~10s for readiness
 ready=0
 for _ in $(seq 1 50); do
   if [ "$(curl -s -o /dev/null -w '%{http_code}' -m 2 "$BASE/readyz" 2>/dev/null || true)" = "200" ]; then
@@ -60,8 +57,7 @@ check 405 "unsupported method"    -X POST "$BASE/healthz"
 big=$(head -c 20000 </dev/zero | tr '\0' 'a')
 check 413 "oversized header"      -H "X-Big: $big" "$BASE/healthz"
 
-# Oversized headers split across TCP segments must also be rejected. A single curl
-# can't reproduce this, so drive it with a raw socket if python3 is available.
+# Same, but split across TCP segments; curl can't do this, so use a raw socket.
 if command -v python3 >/dev/null 2>&1; then
   seg=$(python3 - "$PORT" <<'PY'
 import socket, sys, time
@@ -83,8 +79,7 @@ except OSError:
 print(code)
 PY
 )
-  # The header exceeds the cap, so it must not be accepted (anything but 200: a 413,
-  # or a close/reset once the server has seen enough, all count as rejected).
+  # 413, close, or reset all count as rejected. Only 200 is a failure.
   if [ "$seg" = "200" ]; then
     echo "FAIL [accepted] segmented oversized header"; fail=1
   else
@@ -94,8 +89,7 @@ else
   echo "skip segmented oversized header (python3 not found)"
 fi
 
-# Startup must fail fast (not serve) when a required data file is missing: start the
-# server with a bad config on another port and confirm it never becomes ready.
+# A missing data file must abort startup rather than serve empty results.
 check_failfast() {
   local desc="$1"; shift
   local port2=$((PORT + 1))

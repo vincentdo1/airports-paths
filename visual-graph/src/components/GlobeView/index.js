@@ -2,16 +2,13 @@ import React, { useMemo } from 'react';
 import Globe from 'react-globe.gl';
 import { enrichedAirports, topAirports } from '../../utils/enrichAirports';
 
-// Stable function refs defined at module level so React.memo's shallow
-// prop comparison is never invalidated by a re-render of the parent.
+// module level, so React.memo's shallow compare isn't invalidated by the parent
 const LABEL_COLOR = () => 'rgba(255, 220, 50, 0.95)';
 const POINT_LABEL = () => '';
-// Background network arcs have no stroke of their own; a computed route sets one
-// so it draws thicker than the surrounding traffic.
+// background arcs set no stroke, so a route draws thicker
 const ARC_STROKE = (arc) => arc.stroke || 0.5;
 
 const GlobeView = React.memo(({ globeEl, activeArcs, routeArcs, onPointHover, onPointClick }) => {
-  // Draw the computed route on top of the sampled network arcs.
   const arcs = useMemo(
     () => (routeArcs && routeArcs.length ? [...activeArcs, ...routeArcs] : activeArcs),
     [activeArcs, routeArcs]

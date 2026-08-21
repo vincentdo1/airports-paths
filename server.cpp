@@ -17,22 +17,17 @@
 #include <chrono>
 
 /*
-    A small HTTP/JSON front end for the airport graph. The graph and the
-    precomputed betweenness centrality are loaded once at startup and then only
-    read, so a fixed pool of worker threads can answer requests at the same time
-    without any locking. Each accepted connection becomes one job handed to the
-    pool; a worker reads the request, routes it to the right handler, and writes
-    back JSON. The heavy graph work (BFS / Dijkstra) lives in AdjList, not in here.
+    HTTP/JSON front end for the airport graph. Loaded once at startup and then only
+    read, so the worker pool shares it without locking. One connection = one job.
 
-    Endpoints:
-      GET /healthz                                        -> liveness check
+      GET /healthz                                        -> liveness
+      GET /readyz                                         -> graph loaded
       GET /api/v1/airports/{code}                         -> airport metadata
-      GET /api/v1/routes?source=..&destination=..&mode=.. -> a route (hops|distance)
+      GET /api/v1/routes?source=..&destination=..&mode=.. -> route (hops|distance)
       GET /api/v1/network/central-airports?limit=..       -> most central airports
 */
 
-//Sockets look slightly different on Windows and everywhere else, so wrap the few
-//pieces we need behind common names.
+//Winsock and BSD sockets behind common names
 #ifdef _WIN32
   #include <winsock2.h>
   #include <ws2tcpip.h>
@@ -50,21 +45,17 @@
   #define closeSocket close
 #endif
 
-//Everything a worker thread needs to answer a request. Both pointers refer to
-//data that is loaded once in main and never changed afterwards.
+//Read-only after startup, so every worker shares it
 struct ServerContext {
     AdjList* graph;
     std::vector<std::pair<std::string, double> >* centrality;
 };
 
-//The listening socket and a run flag live at file scope so the signal handler can
-//reach them. On Ctrl-C we close the listener, which wakes accept() so main can
-//fall out of its loop and shut the pool down cleanly.
+//File scope so onSignal can reach them. Closing the listener wakes accept().
 static volatile sig_atomic_t g_running = 1;
 static socket_t g_listen = BAD_SOCKET;
 
-//Which origin the browser client may call us from (CORS). Defaults to "*"; set
-//AIRPORT_CORS_ORIGIN to restrict it to a specific site.
+//CORS. Set AIRPORT_CORS_ORIGIN to restrict it to one site.
 static std::string g_corsOrigin = "*";
 
 static void onSignal(int) {
@@ -74,14 +65,12 @@ static void onSignal(int) {
     }
 }
 
-//------------------------------ small helpers --------------------------------
-
 static std::string envOr(const char* key, const std::string& fallback) {
     const char* value = getenv(key);
     return value ? std::string(value) : fallback;
 }
 
-//Parse a plain signed integer. Returns false if the whole string isn't one.
+//whole-string signed integer parse
 static bool parseInt(const std::string& s, int& out) {
     if(s.empty()){
         return false;
@@ -89,7 +78,7 @@ static bool parseInt(const std::string& s, int& out) {
     errno = 0;
     char* endp = nullptr;
     long value = std::strtol(s.c_str(), &endp, 10);
-    //Reject trailing junk, strtol's own overflow, and values that don't fit in int.
+    //trailing junk, strtol overflow, or too big for int
     if(*endp != '\0' || errno == ERANGE || value < INT_MIN || value > INT_MAX){
         return false;
     }
@@ -97,9 +86,7 @@ static bool parseInt(const std::string& s, int& out) {
     return true;
 }
 
-//Read an integer setting from the environment, clamped to [lo, hi]. A missing
-//variable uses the default; a malformed or out-of-range value stops startup, so a
-//misconfiguration fails loudly here instead of silently wrapping into nonsense.
+//Env int in [lo, hi]. Bad values exit rather than wrap.
 static int envInt(const char* key, int fallback, int lo, int hi) {
     const char* raw = getenv(key);
     if(raw == nullptr || raw[0] == '\0'){
@@ -113,7 +100,7 @@ static int envInt(const char* key, int fallback, int lo, int hi) {
     return value;
 }
 
-//Airport codes in the data are upper case, so normalize whatever the client sends.
+//airport codes in the data are upper case
 static std::string toUpper(std::string s) {
     for(unsigned long i = 0; i < s.size(); i++){
         s[i] = (char)toupper((unsigned char)s[i]);
@@ -121,8 +108,7 @@ static std::string toUpper(std::string s) {
     return s;
 }
 
-//Escape the two characters that would otherwise break a JSON string. Our values
-//are airport codes and our own messages, so this is all we need.
+//Only codes and our own messages go through here, so these two are enough.
 static std::string jsonEscape(const std::string& s) {
     std::string out;
     for(unsigned long i = 0; i < s.size(); i++){
@@ -134,7 +120,7 @@ static std::string jsonEscape(const std::string& s) {
     return out;
 }
 
-//Decode one hex digit, or -1 if it isn't one.
+//hex digit, or -1
 static int hexValue(char c) {
     if(c >= '0' && c <= '9'){ return c - '0'; }
     if(c >= 'a' && c <= 'f'){ return c - 'a' + 10; }
@@ -142,7 +128,7 @@ static int hexValue(char c) {
     return -1;
 }
 
-//Percent-decode a query value: "%2F" becomes "/", and '+' becomes a space.
+//"%2F" -> "/", '+' -> space
 static std::string urlDecode(const std::string& s) {
     std::string out;
     for(unsigned long i = 0; i < s.size(); i++){
@@ -164,7 +150,7 @@ static std::string urlDecode(const std::string& s) {
     return out;
 }
 
-//Pull one value out of an &-separated query string, or "" if the key isn't there.
+//one value out of an &-separated query string
 static std::string queryParam(const std::string& query, const std::string& key) {
     std::string::size_type pos = 0;
     while(pos <= query.size()){
@@ -198,7 +184,7 @@ static std::string jsonError(const std::string& code, const std::string& message
     return "{\"error\":{\"code\":\"" + code + "\",\"message\":\"" + jsonEscape(message) + "\"}}";
 }
 
-//Turn a path in order into a JSON array of airport codes: ["ORD","SEA","NRT"].
+//["ORD","SEA","NRT"]
 static std::string pathToJson(const std::vector<std::string>& path) {
     std::string out = "[";
     for(unsigned long i = 0; i < path.size(); i++){
@@ -217,8 +203,7 @@ static std::string numberToString(double value) {
     return out.str();
 }
 
-//Emit each airport on the path with its coordinates, so the client can draw the
-//route straight from the response instead of keeping its own coordinate table.
+//Coordinates ride along with the route so the client needs no table of its own.
 static std::string coordsToJson(ServerContext* ctx, const std::vector<std::string>& path) {
     std::string out = "[";
     for(unsigned long i = 0; i < path.size(); i++){
@@ -237,9 +222,6 @@ static std::string coordsToJson(ServerContext* ctx, const std::vector<std::strin
     return out;
 }
 
-//Wrap a status and JSON body in a complete HTTP/1.1 response. We always close the
-//connection afterwards, and allow cross-origin reads so the browser client can
-//call the API directly.
 static std::string httpResponse(int status, const std::string& body) {
     std::ostringstream res;
     res << "HTTP/1.1 " << status << " " << statusText(status) << "\r\n";
@@ -263,8 +245,7 @@ static void sendAll(socket_t client, const std::string& data) {
     }
 }
 
-//Load the precomputed betweenness centrality from a "CODE: value" file (produced
-//offline by main.cpp) and sort it so the most central airports come first.
+//"CODE: value" file written offline by main.cpp, most central first
 static bool centralityGreater(const std::pair<std::string, double>& a,
                               const std::pair<std::string, double>& b) {
     return a.second > b.second;
@@ -280,7 +261,7 @@ static std::vector<std::pair<std::string, double> > loadCentrality(const std::st
     std::string code;
     double value;
     while(in >> code >> value){
-        //The code is written with a trailing ':', e.g. "PEK:", so trim it off.
+        //codes are written "PEK:"
         if(!code.empty() && code[code.size() - 1] == ':'){
             code.erase(code.size() - 1);
         }
@@ -289,8 +270,6 @@ static std::vector<std::pair<std::string, double> > loadCentrality(const std::st
     std::sort(out.begin(), out.end(), centralityGreater);
     return out;
 }
-
-//------------------------------ endpoint handlers ----------------------------
 
 //GET /api/v1/airports/{code}
 static std::pair<int, std::string> handleAirport(ServerContext* ctx, const std::string& code) {
@@ -321,8 +300,7 @@ static std::pair<int, std::string> handleRoutes(ServerContext* ctx, const std::s
     if(mode != "hops" && mode != "distance"){
         return std::make_pair(400, jsonError("UNSUPPORTED_MODE", "mode must be hops or distance"));
     }
-    //Separate an unknown airport (the codes aren't in the graph) from a genuine
-    //lack of any route, so the client gets the more specific error.
+    //an unknown airport is a more useful error than "no route"
     if(ctx->graph->findVertex(source) == NULL || ctx->graph->findVertex(destination) == NULL){
         return std::make_pair(404, jsonError("UNKNOWN_AIRPORT", "source or destination was not found"));
     }
@@ -364,7 +342,7 @@ static std::pair<int, std::string> handleCentral(ServerContext* ctx, const std::
             return std::make_pair(400, jsonError("INVALID_PARAMETER", "limit must be a non-negative integer"));
         }
     }
-    //Keep the response bounded no matter what the client asks for.
+    //cap it, whatever the client asks for
     if(limit > 500){
         limit = 500;
     }
@@ -382,9 +360,6 @@ static std::pair<int, std::string> handleCentral(ServerContext* ctx, const std::
     return std::make_pair(200, body.str());
 }
 
-//------------------------------ connection handling --------------------------
-
-//Set the socket receive timeout to a number of milliseconds.
 static void setRecvTimeoutMs(socket_t sock, int ms) {
 #ifdef _WIN32
     DWORD t = (DWORD)ms;
@@ -397,19 +372,13 @@ static void setRecvTimeoutMs(socket_t sock, int ms) {
 #endif
 }
 
-//The most request-header bytes we'll read. A GET has no body, so this only needs
-//to fit the request line plus a handful of headers; anything larger is rejected.
+//A GET has no body, so this only needs to fit the request line and headers.
 static const std::string::size_type MAX_REQUEST_BYTES = 16384;
 
-//Total time a client gets to send its headers. This is a whole-request deadline,
-//not a per-read idle gap, so a client that dribbles one byte at a time still can't
-//hold a worker much past this.
+//Whole-request deadline, not a per-read gap, so dribbling can't hold a worker.
 static const int REQUEST_DEADLINE_MS = 5000;
 
-//Read the request headers up to the blank line that ends them. Sets 'complete' when
-//that blank line arrives within the size cap, and 'tooLarge' if the headers run past
-//the cap. The end-of-headers marker is checked by position (not merely "seen"), a
-//total deadline is enforced across all reads, and we never buffer past the cap.
+//Headers up to the blank line. complete = they fit the cap, tooLarge = they didn't.
 static std::string readRequest(socket_t client, bool& complete, bool& tooLarge) {
     std::string data;
     char buf[4096];
@@ -420,7 +389,6 @@ static std::string readRequest(socket_t client, bool& complete, bool& tooLarge) 
     while(true){
         std::string::size_type marker = data.find("\r\n\r\n");
         if(marker != std::string::npos){
-            //Headers ended; accept only if they fit within the cap.
             if(marker + 4 > MAX_REQUEST_BYTES){
                 tooLarge = true;
             } else {
@@ -429,11 +397,10 @@ static std::string readRequest(socket_t client, bool& complete, bool& tooLarge) 
             break;
         }
         if(data.size() >= MAX_REQUEST_BYTES){
-            //Ran past the cap without an end-of-headers marker.
+            //ran past the cap with no end-of-headers marker
             tooLarge = true;
             break;
         }
-        //Stop once the total deadline passes, even if bytes keep trickling in.
         std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
         if(now >= deadline){
             break;
@@ -443,12 +410,11 @@ static std::string readRequest(socket_t client, bool& complete, bool& tooLarge) 
             remainingMs = 1;
         }
         setRecvTimeoutMs(client, remainingMs);
-        //Never read more than the remaining header allowance.
         std::string::size_type room = (MAX_REQUEST_BYTES + 4) - data.size();
         int want = (int)std::min<std::string::size_type>(sizeof(buf), room);
         int n = recv(client, buf, want, 0);
         if(n <= 0){
-            //Closed, or the receive timed out (client too slow) — stop.
+            //closed, or recv timed out
             break;
         }
         data.append(buf, (unsigned long)n);
@@ -470,7 +436,7 @@ static void handleConnection(socket_t client, ServerContext* ctx) {
         closeSocket(client);
         return;
     }
-    //Parse the request line: METHOD TARGET VERSION.
+    //METHOD TARGET VERSION
     std::string firstLine = request.substr(0, request.find("\r\n"));
     std::istringstream iss(firstLine);
     std::string method;
@@ -481,7 +447,6 @@ static void handleConnection(socket_t client, ServerContext* ctx) {
     if(method != "GET"){
         result = std::make_pair(405, jsonError("METHOD_NOT_ALLOWED", "Only GET is supported"));
     } else {
-        //Split the target into a path and an optional query string.
         std::string path = target;
         std::string query;
         std::string::size_type qpos = target.find('?');
@@ -494,8 +459,7 @@ static void handleConnection(socket_t client, ServerContext* ctx) {
         if(path == "/healthz"){
             result = std::make_pair(200, std::string("{\"status\":\"ok\"}"));
         } else if(path == "/readyz"){
-            //The graph loads once at startup (and startup aborts if it's empty), so
-            //if we're serving at all the graph is ready to answer route queries.
+            //startup aborts on an empty graph, so serving at all means ready
             std::ostringstream ready;
             ready << "{\"status\":\"ready\",\"airports\":" << ctx->graph->vertexList.size()
                   << ",\"routes\":" << ctx->graph->edgeList.size() << "}";
@@ -515,8 +479,6 @@ static void handleConnection(socket_t client, ServerContext* ctx) {
     closeSocket(client);
 }
 
-//------------------------------ startup --------------------------------------
-
 int main() {
 #ifdef _WIN32
     WSADATA wsa;
@@ -526,10 +488,7 @@ int main() {
     }
 #endif
 
-    //Configuration comes from the environment so the same binary can serve the
-    //500 or 1000 airport set without recompiling. Defaults match the repo data.
-    //Hosting platforms (Fly.io, Render, ...) inject the listen port as PORT; fall
-    //back to our own AIRPORT_PORT, then the default.
+    //Env config so one binary serves either dataset. Hosts inject PORT.
     int port = (getenv("PORT") != nullptr)
                    ? envInt("PORT", 8080, 1, 65535)
                    : envInt("AIRPORT_PORT", 8080, 1, 65535);
@@ -540,7 +499,7 @@ int main() {
     std::string bcFile = envOr("AIRPORT_CENTRALITY", "results/Sorted500BC.txt");
     g_corsOrigin = envOr("AIRPORT_CORS_ORIGIN", "*");
 
-    //Load the graph once. From here on it is read-only, so the workers share it.
+    //read-only from here on, so the workers share it
     AdjList graph(nodesFile, edgesFile);
     std::vector<std::pair<std::string, double> > centrality = loadCentrality(bcFile);
 
@@ -548,7 +507,6 @@ int main() {
     ctx.graph = &graph;
     ctx.centrality = &centrality;
 
-    //Print a short configuration summary so it's clear what the server loaded.
     std::cout << "Airport routing service\n";
     std::cout << "  nodes:      " << nodesFile << " (" << graph.vertexList.size() << " airports)\n";
     std::cout << "  edges:      " << edgesFile << " (" << graph.edgeList.size() << " routes)\n";
@@ -557,8 +515,7 @@ int main() {
     std::cout << "  threads:    " << threads << "\n";
     std::cout << "  max queue:  " << maxQueue << "\n";
 
-    //Refuse to start unless every required input actually loaded: a missing or
-    //unreadable dataset should fail loudly here, not quietly serve empty results.
+    //a missing dataset should fail here, not quietly serve empty results
     if(graph.vertexList.empty()){
         std::cerr << "no airports loaded from " << nodesFile << "; refusing to start\n";
         return 1;
@@ -599,25 +556,22 @@ int main() {
     std::cout << "listening on http://localhost:" << port << " ...\n" << std::flush;
 
     {
-        //The pool of worker threads. One job is submitted per accepted connection.
         ThreadPool pool(threads, maxQueue);
         while(g_running){
             sockaddr_in clientAddr;
             socklen_t clientLen = sizeof(clientAddr);
             socket_t client = accept(g_listen, (sockaddr*)&clientAddr, &clientLen);
             if(client == BAD_SOCKET){
-                //accept() was interrupted, almost always by shutdown closing the socket.
+                //interrupted, almost always by shutdown closing the socket
                 break;
             }
             ServerContext* cptr = &ctx;
             if(!pool.submit([client, cptr]{ handleConnection(client, cptr); })){
-                //Backlog is full: reply with an explicit overload status and move on.
                 sendAll(client, httpResponse(503, jsonError("OVERLOADED", "Server is busy, try again shortly")));
                 closeSocket(client);
             }
         }
-        //Leaving this scope destroys the pool, which drains queued jobs and joins
-        //every worker thread before we exit.
+        //~ThreadPool drains the queue and joins every worker
     }
 
     std::cout << "shutting down\n";

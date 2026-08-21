@@ -11,7 +11,7 @@ export const useArcData = () => {
   const [arcCount,    setArcCount]    = useState(DEFAULT_COUNT);
   const [sliderValue, setSliderValue] = useState(DEFAULT_COUNT);
 
-  // Re-sample only when arcCount commits (slider mouseup), not on every drag tick.
+  // re-sample on slider mouseup, not every drag tick
   useEffect(() => {
     setDisplayArcs(sampleArcs(arcsData, arcCount));
   }, [arcCount]);

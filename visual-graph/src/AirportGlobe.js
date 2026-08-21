@@ -36,11 +36,9 @@ const AirportGlobe = () => {
 
   useGlobeNavigation(globeEl, selectedAirport);
 
-  // Arc objects for the currently returned route (empty until one is found).
   const routeArcs = useMemo(() => buildRouteArcs(coordinates), [coordinates]);
 
-  // When a new route comes back, swing the camera to its origin so the drawn
-  // arc is actually in view.
+  // swing the camera to the route's origin so the arc is actually in view
   useEffect(() => {
     if (status === 'success' && coordinates.length > 0 && globeEl.current) {
       globeEl.current.pointOfView(
@@ -50,7 +48,7 @@ const AirportGlobe = () => {
     }
   }, [status, coordinates]);
 
-  // Reposition the tooltip via direct DOM writes — no setState, no re-renders.
+  // direct DOM writes: no setState, no re-render on every mousemove
   const handleMouseMove = useCallback((e) => {
     if (tooltipRef.current) {
       tooltipRef.current.style.left = `${e.clientX + 14}px`;
@@ -58,7 +56,7 @@ const AirportGlobe = () => {
     }
   }, []);
 
-  // Stable callbacks so GlobeView (React.memo) never re-renders from these.
+  // stable refs, so GlobeView's memo isn't invalidated
   const handlePointHover = useCallback((point) => setHoveredAirport(point), []);
   const handlePointClick = useCallback((point) => setSelectedAirport(point.id), []);
 

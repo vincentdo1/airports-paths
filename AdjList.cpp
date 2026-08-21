@@ -79,8 +79,7 @@ AdjList::~AdjList(){
     }
 }
 
-// Copy construction and assignment are deleted in the header (this graph is loaded
-// once and then only read), so there is nothing to define here.
+//copy ctor and assignment are deleted in the header
 
 //Calculate distance between two nodes via Haversine formula (on Wikipedia). This calculation doesn't have
 //to be particularly precise.

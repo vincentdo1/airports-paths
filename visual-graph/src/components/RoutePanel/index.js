@@ -2,7 +2,7 @@ import React from 'react';
 import nodesData from '../../data/nodes_data.json';
 import './RoutePanel.css';
 
-// Friendly titles for the error codes the API (and the hook) can return.
+// titles for the error codes the API and the hook return
 const ERROR_TITLES = {
   MISSING_PARAMETER:  'Missing input',
   UNKNOWN_AIRPORT:    'Unknown airport',
@@ -26,7 +26,6 @@ const RoutePanel = ({
   latency,
   onFindRoute,
 }) => {
-  // Let Enter in either field kick off the search.
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') onFindRoute();
   };

@@ -2,8 +2,7 @@ import React from 'react';
 import { TOP_AIRPORTS } from '../../constants/airports';
 import './Tooltip.css';
 
-// tooltipRef is a forwarded ref so the parent can update position via direct
-// DOM writes on mousemove — bypassing React state and avoiding re-renders.
+// forwarded ref: the parent moves this with direct DOM writes on mousemove
 const Tooltip = React.forwardRef(({ hoveredAirport }, ref) => (
   <div
     ref={ref}

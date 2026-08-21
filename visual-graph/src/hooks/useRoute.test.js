@@ -1,7 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { useRoute } from './useRoute';
 
-// Resolve fetch once with a given ok flag and JSON body.
 function mockFetch(ok, body) {
   global.fetch = jest.fn().mockResolvedValueOnce({ ok, json: async () => body });
 }

@@ -19,7 +19,7 @@ TEST_CASE("BFSPath finds the fewest-hop route", "[weight=1]") {
   graph.insertVertex("C", 2, 2);
   graph.insertVertex("D", 3, 3);
 
-  //Two ways from A to D, both two hops. A-B-D is inserted first, so BFS finds it first.
+  //two ways from A to D, both two hops. A-B-D is inserted first, so BFS wins with it
   graph.insertEdge("AB", graph.findVertex("A"), graph.findVertex("B"));
   graph.insertEdge("BD", graph.findVertex("B"), graph.findVertex("D"));
   graph.insertEdge("AC", graph.findVertex("A"), graph.findVertex("C"));
@@ -40,7 +40,7 @@ TEST_CASE("BFSPath counts hops and ignores distance", "[weight=1]") {
   graph.insertEdge("AB", graph.findVertex("A"), graph.findVertex("B"));
   graph.insertEdge("BC", graph.findVertex("B"), graph.findVertex("C"));
 
-  //Even if the detour were shorter in kilometers, BFS still takes the single hop.
+  //BFS takes the single hop even if the detour were shorter in km
   REQUIRE(graph.BFSPath("A", "C") == std::vector<std::string>{"A", "C"});
 }
 
@@ -50,12 +50,12 @@ TEST_CASE("BFSPath handles same airport, unknown airport, and no route", "[weigh
   graph.insertVertex("B", 1, 1);
   graph.insertEdge("AB", graph.findVertex("A"), graph.findVertex("B"));
 
-  //Same source and destination is a zero-hop route
+  //same airport is a zero-hop route
   REQUIRE(graph.BFSPath("A", "A") == std::vector<std::string>{"A"});
-  //Unknown airports can't be routed
+  //unknown airports
   REQUIRE(graph.BFSPath("A", "Z").empty());
   REQUIRE(graph.BFSPath("Z", "A").empty());
-  //Edges are directed, so there is no way back from B to A
+  //edges are directed, so no way back from B to A
   REQUIRE(graph.BFSPath("B", "A").empty());
 }
 
@@ -77,7 +77,7 @@ TEST_CASE("DijkstraPath finds the shortest route by distance", "[weight=1]") {
   REQUIRE(route.first == std::vector<std::string>{"A", "B", "C"});
   REQUIRE(route.second == 2.0);
 
-  //By hops, though, the direct edge wins. The two modes disagree on purpose here.
+  //by hops the direct edge wins: the two modes disagree on purpose here
   REQUIRE(graph.BFSPath("A", "C") == std::vector<std::string>{"A", "C"});
 }
 
