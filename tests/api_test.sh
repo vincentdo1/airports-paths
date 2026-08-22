@@ -4,16 +4,20 @@
 set -u
 
 SERVER="${1:-./build/server}"
-PORT="${AIRPORT_TEST_PORT:-18137}"
-BASE="http://127.0.0.1:${PORT}"
+TEST_PORT="${AIRPORT_TEST_PORT:-18137}"
+BASE="http://127.0.0.1:${TEST_PORT}"
 LOG="$(mktemp 2>/dev/null || echo /tmp/api_test_server.log)"
 fail=0
 
-AIRPORT_PORT="$PORT" "$SERVER" >"$LOG" 2>&1 &
+PORT="$TEST_PORT" "$SERVER" >"$LOG" 2>&1 &
 SERVER_PID=$!
-trap 'kill "$SERVER_PID" 2>/dev/null' EXIT
+cleanup() {
+  kill "$SERVER_PID" 2>/dev/null || true
+  wait "$SERVER_PID" 2>/dev/null || true
+  rm -f "$LOG"
+}
+trap cleanup EXIT
 
-# wait ~10s for readiness
 ready=0
 for _ in $(seq 1 50); do
   if [ "$(curl -s -o /dev/null -w '%{http_code}' -m 2 "$BASE/readyz" 2>/dev/null || true)" = "200" ]; then
@@ -59,7 +63,7 @@ check 413 "oversized header"      -H "X-Big: $big" "$BASE/healthz"
 
 # Same, but split across TCP segments; curl can't do this, so use a raw socket.
 if command -v python3 >/dev/null 2>&1; then
-  seg=$(python3 - "$PORT" <<'PY'
+  seg=$(python3 - "$TEST_PORT" <<'PY'
 import socket, sys, time
 port = int(sys.argv[1])
 code = "000"
@@ -85,6 +89,7 @@ PY
   else
     echo "ok   [$seg] segmented oversized header rejected"
   fi
+  check 200 "health after segmented header" "$BASE/healthz"
 else
   echo "skip segmented oversized header (python3 not found)"
 fi
@@ -92,23 +97,43 @@ fi
 # A missing data file must abort startup rather than serve empty results.
 check_failfast() {
   local desc="$1"; shift
-  local port2=$((PORT + 1))
-  env AIRPORT_PORT="$port2" "$@" "$SERVER" >/dev/null 2>&1 &
+  local port2=$((TEST_PORT + 1))
+  local child_log
+  child_log="$(mktemp 2>/dev/null || echo "${LOG}.${port2}")"
+  env PORT="$port2" "$@" "$SERVER" >"$child_log" 2>&1 &
   local pid=$!
   local up=0
+  local exited=0
+  local status=0
   for _ in $(seq 1 15); do
     if [ "$(curl -s -o /dev/null -w '%{http_code}' -m 1 "http://127.0.0.1:$port2/readyz" 2>/dev/null)" = "200" ]; then
       up=1; break
     fi
-    kill -0 "$pid" 2>/dev/null || break   # process already exited => it failed fast
+    if ! kill -0 "$pid" 2>/dev/null; then
+      wait "$pid" 2>/dev/null
+      status=$?
+      exited=1
+      break
+    fi
     sleep 0.2
   done
   if [ "$up" = "1" ]; then
-    echo "FAIL [started] $desc"; fail=1; kill "$pid" 2>/dev/null
+    echo "FAIL [started] $desc"; fail=1
+    kill -KILL "$pid" 2>/dev/null
+    wait "$pid" 2>/dev/null
+  elif [ "$exited" != "1" ]; then
+    echo "FAIL [did not exit] $desc"; fail=1
+    kill -KILL "$pid" 2>/dev/null
+    wait "$pid" 2>/dev/null
+  elif [ "$status" = "0" ]; then
+    echo "FAIL [exited successfully] $desc"; fail=1
+  elif ! grep -q "refusing to start" "$child_log"; then
+    echo "FAIL [wrong failure] $desc"; fail=1
+    cat "$child_log"
   else
     echo "ok   [failed fast] $desc"
   fi
-  wait "$pid" 2>/dev/null
+  rm -f "$child_log"
 }
 
 check_failfast "missing edge file fails fast"       AIRPORT_EDGES=/nonexistent-edges.txt

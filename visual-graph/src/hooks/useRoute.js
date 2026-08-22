@@ -1,26 +1,30 @@
 import { useState, useCallback, useRef } from 'react';
 
-// set REACT_APP_API_URL at build time to point at the hosted API
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 const TIMEOUT_MS = 8000;
 const EMPTY = [];
 
 export const useRoute = () => {
-  const [source, setSource]           = useState('');
+  const [source, setSource] = useState('');
   const [destination, setDestination] = useState('');
-  const [mode, setMode]               = useState('hops');
+  const [mode, setMode] = useState('hops');
 
-  const [status, setStatus]   = useState('idle');   // idle | loading | success | error
-  const [result, setResult]   = useState(null);     // { path, coordinates, hops, algorithm, distanceKm? }
-  const [error, setError]     = useState(null);     // { code, message }
-  const [latency, setLatency] = useState(null);     // round-trip ms
+  const [status, setStatus] = useState('idle');
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [latency, setLatency] = useState(null);
 
-  // in-flight request, so a newer one can cancel it and stale results get dropped
   const activeRef = useRef(null);
 
   const requestRoute = useCallback(async () => {
     const from = source.trim().toUpperCase();
-    const to   = destination.trim().toUpperCase();
+    const to = destination.trim().toUpperCase();
+
+    if (activeRef.current) {
+      activeRef.current.abort();
+      activeRef.current = null;
+    }
+
     if (!from || !to) {
       setStatus('error');
       setResult(null);
@@ -28,9 +32,6 @@ export const useRoute = () => {
       return;
     }
 
-    if (activeRef.current) {
-      activeRef.current.abort();
-    }
     const controller = new AbortController();
     activeRef.current = controller;
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -40,14 +41,14 @@ export const useRoute = () => {
     const started = performance.now();
     try {
       const url = `${API_BASE}/api/v1/routes?source=${encodeURIComponent(from)}`
-                + `&destination=${encodeURIComponent(to)}&mode=${mode}`;
+        + `&destination=${encodeURIComponent(to)}&mode=${mode}`;
       const res = await fetch(url, { signal: controller.signal });
       const body = await res.json();
       clearTimeout(timer);
-      // superseded by a newer request
       if (activeRef.current !== controller) {
         return;
       }
+      activeRef.current = null;
       setLatency(Math.round(performance.now() - started));
       if (!res.ok) {
         setStatus('error');
@@ -63,6 +64,7 @@ export const useRoute = () => {
       if (activeRef.current !== controller) {
         return;
       }
+      activeRef.current = null;
       setLatency(Math.round(performance.now() - started));
       setStatus('error');
       setResult(null);

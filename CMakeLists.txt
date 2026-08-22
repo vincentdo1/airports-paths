@@ -37,7 +37,6 @@ if(WIN32)
   target_link_libraries(server PRIVATE ws2_32)
 endif()
 
-# offline betweenness-centrality generator
 add_executable(main main.cpp)
 target_link_libraries(main PRIVATE airport_core)
 

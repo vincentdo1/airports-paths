@@ -1,4 +1,3 @@
-/* ── Control Panel Shell ── */
 .control-panel {
   position: absolute;
   top: 20px;
@@ -28,7 +27,6 @@
   border-radius: 2px;
 }
 
-/* ── Header ── */
 .panel-header {
   display: flex;
   flex-direction: column;
@@ -59,7 +57,6 @@
   line-height: 1.5;
 }
 
-/* ── Divider ── */
 .panel-divider {
   height: 1px;
   background: linear-gradient(
@@ -72,7 +69,6 @@
   margin: 0 -4px;
 }
 
-/* ── Section Layout ── */
 .panel-section {
   display: flex;
   flex-direction: column;
@@ -101,7 +97,6 @@
   font-style: italic;
 }
 
-/* ── Airport Select ── */
 .select-wrapper {
   position: relative;
 }
@@ -144,7 +139,6 @@
   line-height: 1;
 }
 
-/* ── Toggle Button ── */
 .toggle-btn {
   padding: 4px 13px;
   font-size: 10.5px;
@@ -171,7 +165,6 @@
 }
 .toggle-btn.off:hover { background: rgba(220, 60, 60, 0.2); }
 
-/* ── Arc Slider ── */
 .slider-group {
   display: flex;
   flex-direction: column;
@@ -227,7 +220,6 @@
   color: rgba(140, 170, 220, 0.35);
 }
 
-/* ── Legend ── */
 .legend-items {
   display: flex;
   flex-direction: column;
@@ -267,7 +259,6 @@
   flex-shrink: 0;
 }
 
-/* ── Stats Bar ── */
 .panel-stats {
   display: flex;
   align-items: center;
@@ -307,7 +298,6 @@
   background: rgba(80, 130, 255, 0.15);
 }
 
-/* ── GitHub Link ── */
 .github-link {
   display: inline-flex;
   align-items: center;

@@ -25,7 +25,7 @@ ThreadPool::~ThreadPool() {
 bool ThreadPool::submit(std::function<void()> job) {
     {
         std::unique_lock<std::mutex> lock(jobsMutex);
-        //shed rather than let the queue grow without bound
+        // Reject work instead of allowing an unbounded backlog.
         if(maxQueue > 0 && jobs.size() >= maxQueue){
             return false;
         }
@@ -41,14 +41,13 @@ void ThreadPool::workerLoop() {
         {
             std::unique_lock<std::mutex> lock(jobsMutex);
             jobsCV.wait(lock, [this]{ return stopping || !jobs.empty(); });
-            //drain before stopping, so no queued job is dropped
+            // Finish queued jobs before workers exit.
             if(stopping && jobs.empty()){
                 return;
             }
             job = jobs.front();
             jobs.pop();
         }
-        //lock released, so other workers can pull jobs meanwhile
         job();
     }
 }

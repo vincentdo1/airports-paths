@@ -79,8 +79,6 @@ AdjList::~AdjList(){
     }
 }
 
-//copy ctor and assignment are deleted in the header
-
 //Calculate distance between two nodes via Haversine formula (on Wikipedia). This calculation doesn't have
 //to be particularly precise.
 double AdjList::distance(VertexNode* start, VertexNode* end){

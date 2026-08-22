@@ -180,8 +180,6 @@ std::map<std::string, double> AdjList::BCAlgorithm() {
     return toreturn;
 }
 
-//Fewest-hop path. Hops ignore edge weight, so plain BFS is enough.
-//Empty vector if unreachable or an airport is unknown.
 std::vector<std::string> AdjList::BFSPath(std::string start, std::string end){
     std::vector<std::string> path;
     VertexNode* startVertex = findVertex(start);
@@ -193,7 +191,7 @@ std::vector<std::string> AdjList::BFSPath(std::string start, std::string end){
         path.push_back(start);
         return path;
     }
-    //cameFrom doubles as the visited set
+    // cameFrom also tracks visited airports.
     std::map<std::string, std::string> cameFrom;
     std::queue<VertexNode*> q;
     q.push(startVertex);
@@ -202,8 +200,7 @@ std::vector<std::string> AdjList::BFSPath(std::string start, std::string end){
     while(!q.empty() && !found){
         VertexNode* v = q.front();
         q.pop();
-        //edges live on their source, so ends.second is the neighbor. Insertion
-        //order keeps ties deterministic: first equal-hop path discovered wins.
+        // Outgoing-edge order makes equal-hop ties deterministic.
         for(std::list<EdgeNode*>::iterator itrEdge = v->edges.begin(); itrEdge != v->edges.end(); itrEdge++){
             VertexNode* w = (*itrEdge)->ends.second;
             if(cameFrom.find(w->ID) == cameFrom.end()){
@@ -219,7 +216,6 @@ std::vector<std::string> AdjList::BFSPath(std::string start, std::string end){
     if(cameFrom.find(end) == cameFrom.end()){
         return path;
     }
-    //walk back from the destination, then flip
     std::string cur = end;
     while(cur != start){
         path.push_back(cur);
@@ -230,8 +226,6 @@ std::vector<std::string> AdjList::BFSPath(std::string start, std::string end){
     return path;
 }
 
-//Shortest path by distance. Edges carry their length in km from insertEdge().
-//first is the path, second the total distance. Empty path if unreachable.
 std::pair<std::vector<std::string>, double> AdjList::DijkstraPath(std::string start, std::string end){
     std::vector<std::string> path;
     VertexNode* startVertex = findVertex(start);
@@ -243,7 +237,7 @@ std::pair<std::vector<std::string>, double> AdjList::DijkstraPath(std::string st
         path.push_back(start);
         return std::pair<std::vector<std::string>, double>(path, 0);
     }
-    //index once so relaxation doesn't rescan vertexList each time
+    // Index once instead of rescanning vertexList during relaxation.
     std::map<std::string, VertexNode*> lookup;
     for(std::list<VertexNode*>::iterator itr = vertexList.begin(); itr != vertexList.end(); itr++){
         lookup[(*itr)->ID] = *itr;
@@ -254,14 +248,14 @@ std::pair<std::vector<std::string>, double> AdjList::DijkstraPath(std::string st
         dist[(*itr)->ID] = INFINITY;
     }
     dist[start] = 0;
-    //min-heap on distance; ties fall back to ID so results stay deterministic
+    // Pair ordering gives distance priority and deterministic airport-ID ties.
     std::priority_queue<std::pair<double, std::string>, std::vector<std::pair<double, std::string> >, std::greater<std::pair<double, std::string> > > pq;
     pq.push(std::make_pair(0.0, start));
     while(!pq.empty()){
         double d = pq.top().first;
         std::string uID = pq.top().second;
         pq.pop();
-        //stale entry from an earlier, longer relaxation
+        // Ignore entries superseded by a shorter route.
         if(d > dist[uID]){
             continue;
         }

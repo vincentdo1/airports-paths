@@ -1,7 +1,8 @@
-# the image needs only the C++ sources, CMakeLists, catch/, data/ and results/
 .git
 .github
+.claude
 .vscode
+outline
 docs
 visual-graph
 build

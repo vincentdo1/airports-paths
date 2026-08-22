@@ -1,7 +1,3 @@
-#   fly launch --no-deploy
-#   fly deploy
-#
-# Fly terminates HTTPS, which GitHub Pages needs: an HTTPS page can't call an HTTP API.
 app = "airport-routing-vmd306"
 
 primary_region = "iad"

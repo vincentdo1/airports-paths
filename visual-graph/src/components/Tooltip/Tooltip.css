@@ -1,4 +1,3 @@
-/* ── Hover Tooltip ── */
 /* Always mounted so position can be updated via a DOM ref without triggering
    React state updates. Visibility is controlled by .tooltip-visible. */
 .hover-tooltip {

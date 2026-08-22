@@ -7,16 +7,12 @@
 #include <condition_variable>
 #include <functional>
 
-/*
-    Fixed workers, bounded backlog. The worker count caps concurrent requests and
-    the queue depth caps the backlog, so a burst sheds load instead of piling up.
-*/
 class ThreadPool {
   public:
     ThreadPool(unsigned int workers, unsigned int maxQueue);
     ~ThreadPool();
 
-    //false once the backlog is at its cap, so the caller can shed the request
+    // Returns false when the queue is at capacity.
     bool submit(std::function<void()> job);
 
   private:

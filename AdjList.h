@@ -44,8 +44,7 @@ class AdjList
     //dtor
     ~AdjList();
 
-    //Owns raw pointers and is loaded once then only read, so copying makes no
-    //sense. The old copy ctor recursed into itself; assignment did nothing.
+    // Default copying would duplicate owning pointers.
     AdjList& operator =(const AdjList &other) = delete;
     AdjList(const AdjList& rhs) = delete;
     //*******************

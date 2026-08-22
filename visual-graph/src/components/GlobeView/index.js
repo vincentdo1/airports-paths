@@ -2,10 +2,8 @@ import React, { useMemo } from 'react';
 import Globe from 'react-globe.gl';
 import { enrichedAirports, topAirports } from '../../utils/enrichAirports';
 
-// module level, so React.memo's shallow compare isn't invalidated by the parent
 const LABEL_COLOR = () => 'rgba(255, 220, 50, 0.95)';
 const POINT_LABEL = () => '';
-// background arcs set no stroke, so a route draws thicker
 const ARC_STROKE = (arc) => arc.stroke || 0.5;
 
 const GlobeView = React.memo(({ globeEl, activeArcs, routeArcs, onPointHover, onPointClick }) => {

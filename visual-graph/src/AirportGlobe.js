@@ -12,14 +12,15 @@ import './AirportGlobe.css';
 
 const AirportGlobe = () => {
   const [selectedAirport, setSelectedAirport] = useState('');
-  const [hoveredAirport, setHoveredAirport]   = useState(null);
+  const [hoveredAirport, setHoveredAirport] = useState(null);
 
-  const globeEl    = useRef(null);
+  const globeEl = useRef(null);
   const tooltipRef = useRef(null);
 
   const {
     activeArcs,
-    showArcs, setShowArcs,
+    showArcs,
+    setShowArcs,
     arcCount,
     sliderValue,
     handleSliderChange,
@@ -27,10 +28,17 @@ const AirportGlobe = () => {
   } = useArcData();
 
   const {
-    source, setSource,
-    destination, setDestination,
-    mode, setMode,
-    status, result, error, latency, coordinates,
+    source,
+    setSource,
+    destination,
+    setDestination,
+    mode,
+    setMode,
+    status,
+    result,
+    error,
+    latency,
+    coordinates,
     requestRoute,
   } = useRoute();
 
@@ -38,7 +46,7 @@ const AirportGlobe = () => {
 
   const routeArcs = useMemo(() => buildRouteArcs(coordinates), [coordinates]);
 
-  // swing the camera to the route's origin so the arc is actually in view
+  // Keep the returned route in view.
   useEffect(() => {
     if (status === 'success' && coordinates.length > 0 && globeEl.current) {
       globeEl.current.pointOfView(
@@ -48,15 +56,14 @@ const AirportGlobe = () => {
     }
   }, [status, coordinates]);
 
-  // direct DOM writes: no setState, no re-render on every mousemove
+  // Avoid rerendering the globe on every mousemove.
   const handleMouseMove = useCallback((e) => {
     if (tooltipRef.current) {
       tooltipRef.current.style.left = `${e.clientX + 14}px`;
-      tooltipRef.current.style.top  = `${e.clientY - 36}px`;
+      tooltipRef.current.style.top = `${e.clientY - 36}px`;
     }
   }, []);
 
-  // stable refs, so GlobeView's memo isn't invalidated
   const handlePointHover = useCallback((point) => setHoveredAirport(point), []);
   const handlePointClick = useCallback((point) => setSelectedAirport(point.id), []);
 

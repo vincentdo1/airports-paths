@@ -78,8 +78,9 @@ const ControlPanel = ({
             step={100}
             value={sliderValue}
             onChange={onSliderChange}
-            onMouseUp={onSliderCommit}
-            onTouchEnd={onSliderCommit}
+            onPointerUp={onSliderCommit}
+            onKeyUp={onSliderCommit}
+            onBlur={onSliderCommit}
             className="arc-slider"
           />
           <div className="slider-range">

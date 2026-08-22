@@ -4,14 +4,6 @@
 #include <vector>
 #include <utility>
 
-/*
-    These tests cover the two routing algorithms used by the API: BFSPath, which
-    returns the route with the fewest hops, and DijkstraPath, which returns the
-    route with the shortest total distance. The little graphs are built by hand the
-    same way the FW and BC tests are, so the expected routes are easy to follow.
-    Distances are set with changeDistance so we control the edge weights directly.
-*/
-
 TEST_CASE("BFSPath finds the fewest-hop route", "[weight=1]") {
   AdjList graph;
   graph.insertVertex("A", 0, 0);
@@ -19,7 +11,7 @@ TEST_CASE("BFSPath finds the fewest-hop route", "[weight=1]") {
   graph.insertVertex("C", 2, 2);
   graph.insertVertex("D", 3, 3);
 
-  //two ways from A to D, both two hops. A-B-D is inserted first, so BFS wins with it
+  // Both routes have two hops; insertion order breaks the tie.
   graph.insertEdge("AB", graph.findVertex("A"), graph.findVertex("B"));
   graph.insertEdge("BD", graph.findVertex("B"), graph.findVertex("D"));
   graph.insertEdge("AC", graph.findVertex("A"), graph.findVertex("C"));
@@ -35,12 +27,10 @@ TEST_CASE("BFSPath counts hops and ignores distance", "[weight=1]") {
   graph.insertVertex("B", 1, 1);
   graph.insertVertex("C", 2, 2);
 
-  //A direct A->C hop plus a longer-way-around A->B->C detour.
   graph.insertEdge("AC", graph.findVertex("A"), graph.findVertex("C"));
   graph.insertEdge("AB", graph.findVertex("A"), graph.findVertex("B"));
   graph.insertEdge("BC", graph.findVertex("B"), graph.findVertex("C"));
 
-  //BFS takes the single hop even if the detour were shorter in km
   REQUIRE(graph.BFSPath("A", "C") == std::vector<std::string>{"A", "C"});
 }
 
@@ -50,12 +40,9 @@ TEST_CASE("BFSPath handles same airport, unknown airport, and no route", "[weigh
   graph.insertVertex("B", 1, 1);
   graph.insertEdge("AB", graph.findVertex("A"), graph.findVertex("B"));
 
-  //same airport is a zero-hop route
   REQUIRE(graph.BFSPath("A", "A") == std::vector<std::string>{"A"});
-  //unknown airports
   REQUIRE(graph.BFSPath("A", "Z").empty());
   REQUIRE(graph.BFSPath("Z", "A").empty());
-  //edges are directed, so no way back from B to A
   REQUIRE(graph.BFSPath("B", "A").empty());
 }
 
@@ -65,7 +52,6 @@ TEST_CASE("DijkstraPath finds the shortest route by distance", "[weight=1]") {
   graph.insertVertex("B", 1, 1);
   graph.insertVertex("C", 2, 2);
 
-  //One direct but long hop versus a cheaper two-hop path.
   graph.insertEdge("AC", graph.findVertex("A"), graph.findVertex("C"));
   graph.insertEdge("AB", graph.findVertex("A"), graph.findVertex("B"));
   graph.insertEdge("BC", graph.findVertex("B"), graph.findVertex("C"));
@@ -77,7 +63,7 @@ TEST_CASE("DijkstraPath finds the shortest route by distance", "[weight=1]") {
   REQUIRE(route.first == std::vector<std::string>{"A", "B", "C"});
   REQUIRE(route.second == 2.0);
 
-  //by hops the direct edge wins: the two modes disagree on purpose here
+  // BFS still chooses the direct edge.
   REQUIRE(graph.BFSPath("A", "C") == std::vector<std::string>{"A", "C"});
 }
 
@@ -88,7 +74,6 @@ TEST_CASE("DijkstraPath prefers the cheaper of several routes", "[weight=1]") {
   graph.insertVertex("C", 2, 2);
   graph.insertVertex("D", 3, 3);
 
-  //A->B->D costs 2+2=4, A->C->D costs 1+1=2.
   graph.insertEdge("AB", graph.findVertex("A"), graph.findVertex("B"));
   graph.insertEdge("BD", graph.findVertex("B"), graph.findVertex("D"));
   graph.insertEdge("AC", graph.findVertex("A"), graph.findVertex("C"));
@@ -114,7 +99,6 @@ TEST_CASE("DijkstraPath handles same airport, unknown airport, and no route", "[
   REQUIRE(same.first == std::vector<std::string>{"A"});
   REQUIRE(same.second == 0.0);
 
-  //Unknown airport and a directed dead-end both give an empty path
   REQUIRE(graph.DijkstraPath("A", "Z").first.empty());
   REQUIRE(graph.DijkstraPath("B", "A").first.empty());
 

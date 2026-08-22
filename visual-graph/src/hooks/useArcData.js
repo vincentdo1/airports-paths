@@ -1,20 +1,16 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import arcsData from '../data/arcs_data.json';
 import { sampleArcs } from '../utils/arcSampler';
 
 const DEFAULT_COUNT = 500;
-const EMPTY_ARR = [];
+const EMPTY_ARCS = [];
 
 export const useArcData = () => {
-  const [displayArcs, setDisplayArcs] = useState(() => sampleArcs(arcsData, DEFAULT_COUNT));
-  const [showArcs,    setShowArcs]    = useState(true);
-  const [arcCount,    setArcCount]    = useState(DEFAULT_COUNT);
+  const [showArcs, setShowArcs] = useState(true);
+  const [arcCount, setArcCount] = useState(DEFAULT_COUNT);
   const [sliderValue, setSliderValue] = useState(DEFAULT_COUNT);
 
-  // re-sample on slider mouseup, not every drag tick
-  useEffect(() => {
-    setDisplayArcs(sampleArcs(arcsData, arcCount));
-  }, [arcCount]);
+  const displayArcs = useMemo(() => sampleArcs(arcsData, arcCount), [arcCount]);
 
   const handleSliderChange = (e) => setSliderValue(Number(e.target.value));
   const handleSliderCommit = (e) => {
@@ -23,10 +19,7 @@ export const useArcData = () => {
     setArcCount(val);
   };
 
-  const activeArcs = useMemo(
-    () => (showArcs ? displayArcs : EMPTY_ARR),
-    [showArcs, displayArcs]
-  );
+  const activeArcs = showArcs ? displayArcs : EMPTY_ARCS;
 
   return {
     activeArcs,
