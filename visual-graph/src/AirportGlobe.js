@@ -12,14 +12,15 @@ import './AirportGlobe.css';
 
 const AirportGlobe = () => {
   const [selectedAirport, setSelectedAirport] = useState('');
-  const [hoveredAirport, setHoveredAirport]   = useState(null);
+  const [hoveredAirport, setHoveredAirport] = useState(null);
 
-  const globeEl    = useRef(null);
+  const globeEl = useRef(null);
   const tooltipRef = useRef(null);
 
   const {
     activeArcs,
-    showArcs, setShowArcs,
+    showArcs,
+    setShowArcs,
     arcCount,
     sliderValue,
     handleSliderChange,
@@ -27,20 +28,25 @@ const AirportGlobe = () => {
   } = useArcData();
 
   const {
-    source, setSource,
-    destination, setDestination,
-    mode, setMode,
-    status, result, error, latency, coordinates,
+    source,
+    setSource,
+    destination,
+    setDestination,
+    mode,
+    setMode,
+    status,
+    result,
+    error,
+    latency,
+    coordinates,
     requestRoute,
   } = useRoute();
 
   useGlobeNavigation(globeEl, selectedAirport);
 
-  // Arc objects for the currently returned route (empty until one is found).
   const routeArcs = useMemo(() => buildRouteArcs(coordinates), [coordinates]);
 
-  // When a new route comes back, swing the camera to its origin so the drawn
-  // arc is actually in view.
+  // Keep the returned route in view.
   useEffect(() => {
     if (status === 'success' && coordinates.length > 0 && globeEl.current) {
       globeEl.current.pointOfView(
@@ -50,15 +56,14 @@ const AirportGlobe = () => {
     }
   }, [status, coordinates]);
 
-  // Reposition the tooltip via direct DOM writes — no setState, no re-renders.
+  // Avoid rerendering the globe on every mousemove.
   const handleMouseMove = useCallback((e) => {
     if (tooltipRef.current) {
       tooltipRef.current.style.left = `${e.clientX + 14}px`;
-      tooltipRef.current.style.top  = `${e.clientY - 36}px`;
+      tooltipRef.current.style.top = `${e.clientY - 36}px`;
     }
   }, []);
 
-  // Stable callbacks so GlobeView (React.memo) never re-renders from these.
   const handlePointHover = useCallback((point) => setHoveredAirport(point), []);
   const handlePointClick = useCallback((point) => setSelectedAirport(point.id), []);
 

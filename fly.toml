@@ -1,14 +1,6 @@
-# Fly.io deployment for the airport routing service.
-#
-# First time:
-#   fly launch --no-deploy      # creates the app; pick a unique name + region
-#   fly deploy                  # builds the Dockerfile and ships it
-#
-# Fly terminates HTTPS in front of the service (required: GitHub Pages is HTTPS and
-# can't call an HTTP API), so the browser client talks to https://<app>.fly.dev.
 app = "airport-routing-vmd306"
 
-primary_region = "iad"    # pick a region near you (see: fly platform regions)
+primary_region = "iad"
 
 [build]
   dockerfile = "Dockerfile"
@@ -18,7 +10,7 @@ primary_region = "iad"    # pick a region near you (see: fly platform regions)
   force_https = true
   auto_stop_machines = true
   auto_start_machines = true
-  min_machines_running = 0      # scales to zero when idle; set to 1 to avoid cold starts
+  min_machines_running = 0      # set to 1 to avoid cold starts
 
   [[http_service.checks]]
     method = "GET"

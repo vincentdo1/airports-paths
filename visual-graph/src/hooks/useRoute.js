@@ -1,28 +1,30 @@
 import { useState, useCallback, useRef } from 'react';
 
-// Where the C++ routing service lives. Set REACT_APP_API_URL at build time to point
-// the deployed frontend at the hosted API; locally it defaults to a dev server.
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 const TIMEOUT_MS = 8000;
 const EMPTY = [];
 
 export const useRoute = () => {
-  const [source, setSource]           = useState('');
+  const [source, setSource] = useState('');
   const [destination, setDestination] = useState('');
-  const [mode, setMode]               = useState('hops');
+  const [mode, setMode] = useState('hops');
 
-  const [status, setStatus]   = useState('idle');   // idle | loading | success | error
-  const [result, setResult]   = useState(null);     // { path, coordinates, hops, algorithm, distanceKm? }
-  const [error, setError]     = useState(null);     // { code, message }
-  const [latency, setLatency] = useState(null);     // round-trip ms
+  const [status, setStatus] = useState('idle');
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [latency, setLatency] = useState(null);
 
-  // Tracks the in-flight request so a newer one can cancel it and so a slow older
-  // response can be ignored instead of overwriting a newer result.
   const activeRef = useRef(null);
 
   const requestRoute = useCallback(async () => {
     const from = source.trim().toUpperCase();
-    const to   = destination.trim().toUpperCase();
+    const to = destination.trim().toUpperCase();
+
+    if (activeRef.current) {
+      activeRef.current.abort();
+      activeRef.current = null;
+    }
+
     if (!from || !to) {
       setStatus('error');
       setResult(null);
@@ -30,10 +32,6 @@ export const useRoute = () => {
       return;
     }
 
-    // Cancel whatever is still in flight, then start a fresh request with a timeout.
-    if (activeRef.current) {
-      activeRef.current.abort();
-    }
     const controller = new AbortController();
     activeRef.current = controller;
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -43,17 +41,16 @@ export const useRoute = () => {
     const started = performance.now();
     try {
       const url = `${API_BASE}/api/v1/routes?source=${encodeURIComponent(from)}`
-                + `&destination=${encodeURIComponent(to)}&mode=${mode}`;
+        + `&destination=${encodeURIComponent(to)}&mode=${mode}`;
       const res = await fetch(url, { signal: controller.signal });
       const body = await res.json();
       clearTimeout(timer);
-      // A newer request superseded this one; drop the stale result.
       if (activeRef.current !== controller) {
         return;
       }
+      activeRef.current = null;
       setLatency(Math.round(performance.now() - started));
       if (!res.ok) {
-        // The service returns { error: { code, message } } for every failure.
         setStatus('error');
         setResult(null);
         setError(body.error || { code: 'ERROR', message: 'The request could not be completed.' });
@@ -67,6 +64,7 @@ export const useRoute = () => {
       if (activeRef.current !== controller) {
         return;
       }
+      activeRef.current = null;
       setLatency(Math.round(performance.now() - started));
       setStatus('error');
       setResult(null);

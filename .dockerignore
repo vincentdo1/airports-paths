@@ -1,5 +1,3 @@
-# Keep the build context small: the image only needs the C++ sources, CMakeLists,
-# the vendored Catch header, and the data/ and results/ files.
 .git
 .github
 .claude
@@ -10,7 +8,7 @@ visual-graph
 build
 build-san
 
-# Local build outputs (also gitignored)
+# build outputs (also gitignored)
 *.o
 *.exe
 main

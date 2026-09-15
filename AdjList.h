@@ -44,10 +44,7 @@ class AdjList
     //dtor
     ~AdjList();
 
-    //This graph owns raw pointers and is only ever loaded once and then read, so
-    //copying it doesn't make sense. Deleting these also retires the old copy ctor
-    //and assignment, which were broken (the copy ctor recursed into itself and the
-    //assignment left the target unchanged).
+    // Default copying would duplicate owning pointers.
     AdjList& operator =(const AdjList &other) = delete;
     AdjList(const AdjList& rhs) = delete;
     //*******************

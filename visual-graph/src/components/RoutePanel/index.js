@@ -2,15 +2,14 @@ import React from 'react';
 import nodesData from '../../data/nodes_data.json';
 import './RoutePanel.css';
 
-// Friendly titles for the error codes the API (and the hook) can return.
 const ERROR_TITLES = {
-  MISSING_PARAMETER:  'Missing input',
-  UNKNOWN_AIRPORT:    'Unknown airport',
-  NO_ROUTE:           'No route found',
-  UNSUPPORTED_MODE:   'Unsupported mode',
-  OVERLOADED:         'Server busy',
+  MISSING_PARAMETER: 'Missing input',
+  UNKNOWN_AIRPORT: 'Unknown airport',
+  NO_ROUTE: 'No route found',
+  UNSUPPORTED_MODE: 'Unsupported mode',
+  OVERLOADED: 'Server busy',
   SERVER_UNAVAILABLE: 'Service offline',
-  TIMEOUT:            'Timed out',
+  TIMEOUT: 'Timed out',
 };
 
 const RoutePanel = ({
@@ -26,13 +25,13 @@ const RoutePanel = ({
   latency,
   onFindRoute,
 }) => {
-  // Let Enter in either field kick off the search.
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') onFindRoute();
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (status !== 'loading') onFindRoute();
   };
 
   return (
-    <div className="route-panel">
+    <form className="route-panel" aria-label="Route search" onSubmit={handleSubmit}>
       <div className="route-header">
         <span className="route-logo">⇄</span>
         <h2 className="route-title">Find a Route</h2>
@@ -41,26 +40,26 @@ const RoutePanel = ({
 
       <div className="route-fields">
         <div className="route-field">
-          <label className="section-label">From</label>
+          <label className="section-label" htmlFor="route-source">From</label>
           <input
+            id="route-source"
             className="route-input"
             list="airport-codes"
             value={source}
             onChange={(e) => onSourceChange(e.target.value.toUpperCase())}
-            onKeyDown={handleKeyDown}
             placeholder="e.g. ORD"
             maxLength={3}
           />
         </div>
         <span className="route-arrow-icon">→</span>
         <div className="route-field">
-          <label className="section-label">To</label>
+          <label className="section-label" htmlFor="route-destination">To</label>
           <input
+            id="route-destination"
             className="route-input"
             list="airport-codes"
             value={destination}
             onChange={(e) => onDestinationChange(e.target.value.toUpperCase())}
-            onKeyDown={handleKeyDown}
             placeholder="e.g. NRT"
             maxLength={3}
           />
@@ -73,12 +72,14 @@ const RoutePanel = ({
 
       <div className="route-modes">
         <button
+          type="button"
           className={`route-mode ${mode === 'hops' ? 'active' : ''}`}
           onClick={() => onModeChange('hops')}
         >
           Fewest hops
         </button>
         <button
+          type="button"
           className={`route-mode ${mode === 'distance' ? 'active' : ''}`}
           onClick={() => onModeChange('distance')}
         >
@@ -87,8 +88,8 @@ const RoutePanel = ({
       </div>
 
       <button
+        type="submit"
         className="route-btn"
-        onClick={onFindRoute}
         disabled={status === 'loading'}
       >
         {status === 'loading' ? 'Routing…' : 'Find Route'}
@@ -114,7 +115,7 @@ const RoutePanel = ({
           </div>
         </div>
       )}
-    </div>
+    </form>
   );
 };
 
